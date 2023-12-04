@@ -9,6 +9,8 @@ const TaskSchema = new mongoose.Schema({
     {
       url: String,
       name: String,
+      date_upload: { type: Date, default: Date.now },
+      file_id: mongoose.Types.ObjectId,
     },
   ],
 });

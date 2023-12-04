@@ -5,37 +5,27 @@ import {
   RouterProvider,
   createBrowserRouter,
   createRoutesFromElements,
-  defer,
 } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Board from "./modules/DashboardModule/components/Board";
 import { useMemo } from "react";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
-import { getTaskInfo } from "./redux/kanban/actions";
-import { Layout } from "antd";
+import { Layout, Spin } from "antd";
 import AppLayout from "./layouts/App";
-import ModalAddTask from "./modules/DashboardModule/components/ModalAddTask";
+import ModalTask from "./modules/DashboardModule/components/ModalTask";
 import SidebarMenu from "./modules/DashboardModule/components/SidebarMenu";
-import Sider from "antd/es/layout/Sider";
 import { useCheckAuthUserQuery } from "./redux/sign/reducer";
+import { useAppSelector } from "./redux/store";
+import { selectCommon } from "./redux/common/selectors";
 
 const loggenInRouter = createBrowserRouter(
   createRoutesFromElements(
     <Route element={<Root />}>
       <Route path="/" element={<Home />} />
       <Route path="dashboard" element={<Dashboard />} />
-      <Route path="dashboard/:id" element={<Board />}>
-        <Route
-          path="m/:idm"
-          loader={async ({ params }) => {
-            const data = getTaskInfo(params.idm);
-            return defer({
-              data,
-            });
-          }}
-          element={<ModalAddTask />}
-        />
+      <Route path="dashboard/:projectId" element={<Board />}>
+        <Route path="m/:taskId" element={<ModalTask />} />
         <Route path="share" element={<div>поделиться</div>} />
       </Route>
       <Route path="*" element={<Navigate to={"/"} />} />
@@ -72,15 +62,19 @@ function Home() {
 }
 
 function Root() {
+  const { isLoadingFullScreen } = useAppSelector(selectCommon);
   return (
-    <AppLayout>
-      <Layout hasSider={true}>
-        <Sider>
-          <SidebarMenu />
-        </Sider>
-        <Outlet />
-      </Layout>
-    </AppLayout>
+    <>
+      <AppLayout>
+        <Layout hasSider={true}>
+          <Layout.Sider>
+            <SidebarMenu />
+          </Layout.Sider>
+          <Outlet />
+        </Layout>
+      </AppLayout>
+      <Spin spinning={isLoadingFullScreen} fullscreen />
+    </>
   );
 }
 

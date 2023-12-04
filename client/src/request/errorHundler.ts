@@ -2,21 +2,21 @@ import { notification } from "antd";
 
 import codeMessage from "./codeMessage";
 
-interface IError {
-  response: {
-    status: keyof typeof codeMessage;
-    data: { message: string };
-  };
+export interface IError {
+  status: keyof typeof codeMessage;
+  data: { message: string };
 }
 
-const errorHandler = (error: IError) => {
-  const { response } = error;
+export interface ErrorRes {
+  error: IError;
+}
 
-  if (response && response.status) {
-    const message: string = response.data && response.data.message;
-
-    const errorText = message || codeMessage[response.status];
-    const { status } = response;
+const errorHandler = (errorRes: ErrorRes) => {
+  const { error } = errorRes;
+  console.log(error);
+  if (error && error.status) {
+    const errorText = codeMessage[error.status];
+    const { status } = error;
     notification.config({
       duration: 5,
     });
@@ -24,7 +24,7 @@ const errorHandler = (error: IError) => {
       message: `Ошибка ${status}`,
       description: errorText,
     });
-    return response.data;
+    return error.data;
   } else {
     notification.config({
       duration: 5,

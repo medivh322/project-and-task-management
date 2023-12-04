@@ -2,16 +2,26 @@ import { UploadOutlined } from "@ant-design/icons";
 import { Button, List, Menu, Popover, Typography, Upload } from "antd";
 import Search from "antd/es/input/Search";
 import { uploadFile } from "../../../redux/kanban/actions";
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
+import {
+  useDeleteTaskMutation,
+  useUploadFileMutation,
+} from "../../../redux/task/reducer";
+import { v4 } from "uuid";
 
 const MenuActions = () => {
-  const { idm } = useParams();
+  const { taskId, projectId } = useParams();
+  const [upload] = useUploadFileMutation();
+  const [deleteTask, { isSuccess: successDeleteTask }] =
+    useDeleteTaskMutation();
+
+  if (successDeleteTask) return <Navigate to={"/dashboard/" + projectId} />;
 
   return (
     <Menu
       items={[
         {
-          key: "24dgnebf2",
+          key: v4(),
           label: (
             <Popover
               content={
@@ -20,17 +30,8 @@ const MenuActions = () => {
                     showUploadList={{
                       showRemoveIcon: false,
                     }}
-                    customRequest={async ({
-                      file,
-                      onSuccess,
-                      onError,
-                    }: any) => {
-                      const { success } = await uploadFile({
-                        idm,
-                        file,
-                      });
-
-                      success ? onSuccess() : onError();
+                    customRequest={async ({ file }: any) => {
+                      const data = await upload({ taskId, file });
                     }}
                   >
                     <Button icon={<UploadOutlined />}>загрузить файлы</Button>
@@ -44,7 +45,7 @@ const MenuActions = () => {
           ),
         },
         {
-          key: "24dgvcxvdfsdfnebf2",
+          key: v4(),
           label: (
             <Popover
               content={
@@ -79,6 +80,14 @@ const MenuActions = () => {
             >
               <Typography.Text tabIndex={-1}>участники</Typography.Text>
             </Popover>
+          ),
+        },
+        {
+          key: v4(),
+          label: (
+            <Button onClick={() => deleteTask({ taskId })}>
+              закрыть задачу
+            </Button>
           ),
         },
       ]}

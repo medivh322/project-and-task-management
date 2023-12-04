@@ -2,17 +2,8 @@ import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import * as kanbanTypes from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
-
-export interface ITask {
-  _id: string;
-  name: string;
-  description: string;
-  category_id: string;
-  attachment: {
-    link: string;
-    type: string;
-  }[];
-}
+import errorHandler, { ErrorRes } from "../../request/errorHundler";
+import { commonReducerAction } from "../common/reducer";
 
 interface IKanban {
   userId: string | null;
@@ -43,8 +34,24 @@ export const projectsApi = createApi({
     baseUrl: `${API_BASE_URL}`,
     credentials: "include",
   }),
-  tagTypes: ["Projects"],
+  tagTypes: ["Projects", "Categories"],
   endpoints: (builder) => ({
+    addTask: builder.mutation<
+      { status: string },
+      { categoryId: string | null; name: string }
+    >({
+      query({ name, categoryId }) {
+        return {
+          url: "tasks",
+          method: "POST",
+          body: {
+            name,
+            categoryId,
+          },
+        };
+      },
+      invalidatesTags: ["Categories"],
+    }),
     getListProjects: builder.query<
       { _id: string; name: string }[],
       { userId: string | null }
@@ -76,7 +83,7 @@ export const projectsApi = createApi({
     }),
     deleteProject: builder.mutation<
       { message?: string },
-      { projectId: string }
+      { projectId?: string }
     >({
       query({ projectId }) {
         return {
@@ -84,7 +91,17 @@ export const projectsApi = createApi({
           method: "DELETE",
         };
       },
-      invalidatesTags: ["Projects"],
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
+      },
+      invalidatesTags: (result) =>
+        typeof result !== "undefined" ? ["Projects"] : [],
     }),
     getProjectBoard: builder.query<
       { message?: string; result: any[] | null },
@@ -96,6 +113,52 @@ export const projectsApi = createApi({
           method: "GET",
         };
       },
+      providesTags: ["Categories"],
+    }),
+    addCategory: builder.mutation<
+      { status: string },
+      { name: string; projectId: string | undefined }
+    >({
+      query({ name, projectId }) {
+        return {
+          url: "categories",
+          method: "POST",
+          body: {
+            name,
+            projectId,
+          },
+        };
+      },
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
+      },
+      invalidatesTags: (result) =>
+        typeof result !== "undefined" ? ["Categories"] : [],
+    }),
+    deleteCategory: builder.mutation<void, { categoryId: string | undefined }>({
+      query({ categoryId }) {
+        return {
+          url: "categories/" + categoryId,
+          method: "DELETE",
+        };
+      },
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
+      },
+      invalidatesTags: (result) =>
+        typeof result !== "undefined" ? ["Categories"] : [],
     }),
   }),
 });
@@ -105,6 +168,9 @@ export const {
   useAddListProjectsMutation,
   useDeleteProjectMutation,
   useGetProjectBoardQuery,
+  useAddTaskMutation,
+  useAddCategoryMutation,
+  useDeleteCategoryMutation,
 } = projectsApi;
 export const kanbanReducerState = kanbanSlice.getInitialState;
 export const kanbanActions = kanbanSlice.actions;

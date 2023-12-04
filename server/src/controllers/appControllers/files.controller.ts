@@ -22,6 +22,8 @@ const uploadFilesTask = async (req: any, res: any) => {
           $push: {
             attachment: {
               url: req.protocol + '://' + req.get('host') + '/api/download/file/' + writestream.id,
+              name: name,
+              file_id: new mongoose.mongo.ObjectId(writestream.id),
             },
           },
         },
@@ -48,4 +50,14 @@ const downloadFiles = async (req: any, res: any) => {
     res.status(500).json({ success: false, message: 'ошибка' });
   }
 };
-export { uploadFilesTask, downloadFiles };
+
+const deleteFile = async (req: any, res: any, next: any) => {
+  try {
+    const { id } = req.params;
+    await GridFSBucket.delete(new mongoose.mongo.ObjectId(id));
+    next();
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'ошибка' });
+  }
+};
+export { uploadFilesTask, downloadFiles, deleteFile };

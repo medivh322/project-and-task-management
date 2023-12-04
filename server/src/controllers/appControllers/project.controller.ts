@@ -85,6 +85,11 @@ const deleteProject = async (req: express.Request, res: express.Response) => {
     const { id } = req.params;
 
     await Project.deleteOne({ _id: id });
+
+    res.status(200).json({
+      success: true,
+      message: 'проект был успешно удален',
+    });
   } catch (error: any) {
     res.status(500).json({
       success: false,

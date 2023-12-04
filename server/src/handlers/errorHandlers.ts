@@ -20,10 +20,9 @@ const developmentErrors: ErrorRequestHandler = (error: any, req: any, res: any, 
   });
 };
 
-const notFound = (err: any, req: any, res: any, next: any) => {
+const notFound = (req: any, res: any, next: any) => {
   res.status(404).json({
     success: false,
-    message: "Api url doesn't exist ",
   });
 };
 

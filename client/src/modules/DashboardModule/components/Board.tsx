@@ -1,36 +1,24 @@
-import {
-  Space,
-  Card,
-  Button,
-  Layout,
-  List,
-  Popover,
-  Menu,
-  Typography,
-} from "antd";
-import { Link, Outlet, useNavigation, useParams } from "react-router-dom";
+import { Space, Button, Layout, List, Menu, Popover } from "antd";
+import { Link, Outlet, useParams } from "react-router-dom";
 import { v4 } from "uuid";
-import {
-  useDeleteProjectMutation,
-  useGetProjectBoardQuery,
-} from "../../../redux/kanban/reducer";
+import { useGetProjectBoardQuery } from "../../../redux/kanban/reducer";
+import CategoryTable from "./CategoryTable";
+import SettingsProject from "./popovers/SettingsProject";
+import AddCategory from "./popovers/AddCategory";
 const Board = () => {
   const params = useParams();
   const projectApi = useGetProjectBoardQuery(
-    { projectId: params.id },
+    { projectId: params.projectId },
     {
-      skip: !params.id,
+      skip: !params.projectId,
       refetchOnMountOrArgChange: true,
     }
   );
 
-  const [deleteProject, { isLoading: isLoadingDeleteProject }] =
-    useDeleteProjectMutation();
-
   if (projectApi.isFetching) return <div>загрузка...</div>;
 
   return (
-    <div>
+    <Layout.Content style={{ overflowX: "auto" }}>
       <Layout>
         <List
           itemLayout="horizontal"
@@ -47,18 +35,7 @@ const Board = () => {
                     items={[
                       {
                         key: v4(),
-                        label: (
-                          <Popover
-                            content={
-                              <div>
-                                {/* вы уверены? <Button onClick={() => deleteProject(  )}>да</Button> */}
-                              </div>
-                            }
-                            trigger={"click"}
-                          >
-                            <Typography.Text>закрыть доску</Typography.Text>
-                          </Popover>
-                        ),
+                        label: <SettingsProject paramId={params.projectId} />,
                         title: "закрыть доску",
                       },
                       {
@@ -70,7 +47,6 @@ const Board = () => {
                   />
                 }
                 title="настройки"
-                trigger={"click"}
               >
                 <Button>{item.name}</Button>
               </Popover>
@@ -80,29 +56,18 @@ const Board = () => {
       </Layout>
       {projectApi.data?.result !== null ? (
         <div>
-          <Space size={35} align="start">
+          <Space size={35} align="start" style={{ marginRight: "400px" }}>
             {projectApi.data?.result.map((category: any) => (
-              <Card
-                key={category._id}
-                title={category.name}
-                style={{ width: 350 }}
-              >
-                {category.tasks &&
-                  category.tasks.map((task: any) => (
-                    <Link key={task._id} to={"m/" + task._id}>
-                      {task.name}
-                    </Link>
-                  ))}
-                <Button block>Добавить задачу</Button>
-              </Card>
+              <CategoryTable category={category} key={category._id} />
             ))}
+            <AddCategory projectId={params.projectId} />
           </Space>
           <Outlet />
         </div>
       ) : (
         <div>не найдено, добавьте категорию</div>
       )}
-    </div>
+    </Layout.Content>
   );
 };
 

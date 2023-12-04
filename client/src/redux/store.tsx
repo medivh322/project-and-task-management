@@ -6,6 +6,7 @@ import thunk, { ThunkAction, ThunkDispatch } from "redux-thunk";
 import { projectsApi } from "./kanban/reducer";
 import { setupListeners } from "@reduxjs/toolkit/query";
 import { loggenApi } from "./sign/reducer";
+import taskApi from "./task/reducer";
 
 export const store = configureStore({
   reducer: rootReducer,
@@ -13,6 +14,7 @@ export const store = configureStore({
     getDefaultMiddleware().concat([
       projectsApi.middleware,
       loggenApi.middleware,
+      taskApi.middleware,
     ]),
 });
 

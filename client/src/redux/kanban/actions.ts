@@ -1,36 +1,12 @@
-import {
-  fetchTaskInfo,
-  fetchUploadFile,
-  postCreateTask,
-} from "../../services/kanban.service";
-
-const getTaskInfo = async (id: string | undefined) => {
-  const result: any = await fetchTaskInfo(id);
-  return result;
-};
+import { fetchUploadFile } from "../../services/kanban.service";
 
 interface IUploadFile {
-  idm: string | undefined;
+  taskId: string | undefined;
   file: File;
 }
-const uploadFile = async ({ idm, file }: IUploadFile) => {
-  const result = await fetchUploadFile(idm, file);
+const uploadFile = async ({ taskId, file }: IUploadFile) => {
+  const result = await fetchUploadFile(taskId, file);
   return result;
 };
 
-const createTask = async ({
-  id_user,
-  name,
-}: {
-  id_user: string;
-  name: string;
-}) => {
-  const result = await postCreateTask({
-    id_user,
-    name,
-  });
-
-  return result;
-};
-
-export { getTaskInfo, uploadFile, createTask };
+export { uploadFile };

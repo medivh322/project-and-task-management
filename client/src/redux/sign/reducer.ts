@@ -2,7 +2,9 @@ import * as authTypes from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import axios from "axios";
-import { kanbanActions } from "../kanban/reducer";
+import { kanbanActions, projectsApi } from "../kanban/reducer";
+import errorHandler, { ErrorRes } from "../../request/errorHundler";
+import { commonReducerAction } from "../common/reducer";
 
 type TSignRequest = "login" | "registration";
 
@@ -29,6 +31,12 @@ export const loggenApi = createApi({
         url: "logout",
         method: "GET",
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          dispatch(projectsApi.util.resetApiState());
+        } catch (error: unknown) {}
+      },
       invalidatesTags: ["Auth"],
     }),
     signAction: builder.mutation<
@@ -40,22 +48,27 @@ export const loggenApi = createApi({
         method: "POST",
         body: { ...data },
       }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
+      },
       invalidatesTags: (result, error, arg) => (error ? [] : ["Auth"]),
     }),
     checkAuthUser: builder.query<any, void>({
-      queryFn: async () => {
-        try {
-          const response = await axios.get(`${API_BASE_URL}auth`, {
-            withCredentials: true,
-          });
-          return { data: response.data };
-        } catch (error: any) {
-          return { data: error.response.data };
-        }
-      },
+      query: () => ({
+        url: "auth",
+        method: "GET",
+      }),
       async onQueryStarted(arg, { dispatch, queryFulfilled }) {
-        const { data } = await queryFulfilled;
-        if (!!data.id) dispatch(kanbanActions.SET_ID({ id: data.id }));
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(kanbanActions.SET_ID({ id: data.id }));
+        } catch (error: unknown) {}
       },
       providesTags: ["Auth"],
     }),

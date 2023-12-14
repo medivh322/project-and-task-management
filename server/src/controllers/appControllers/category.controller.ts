@@ -1,11 +1,15 @@
 import { Category } from '@modelscategories.mode';
+import { Task } from '@modelstask.model';
 import express from 'express';
+import mongoose from 'mongoose';
 
 const categoryCreate = async (req: express.Request, res: express.Response) => {
   try {
     const { projectId, name } = req.body;
 
-    const checkExists = await Category.findOne({ name: name }).select('_id').lean();
+    const checkExists = await Category.findOne({ name: name, project_id: new mongoose.Types.ObjectId(projectId) })
+      .select('_id')
+      .lean();
     if (checkExists) {
       return res.status(409).json({
         success: false,
@@ -35,7 +39,7 @@ const categoryDelete = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    await Category.deleteOne({ _id: id });
+    await Category.findOneAndDelete({ _id: id });
 
     res.status(200).json({
       success: true,

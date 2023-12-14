@@ -8,7 +8,6 @@ import {
 } from "react-router-dom";
 import Dashboard from "./pages/Dashboard";
 import Board from "./modules/DashboardModule/components/Board";
-import { useMemo } from "react";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import { Layout, Spin } from "antd";
@@ -18,6 +17,7 @@ import SidebarMenu from "./modules/DashboardModule/components/SidebarMenu";
 import { useCheckAuthUserQuery } from "./redux/sign/reducer";
 import { useAppSelector } from "./redux/store";
 import { selectCommon } from "./redux/common/selectors";
+import SettingsProject from "./modules/DashboardModule/components/SettingsProject";
 
 const loggenInRouter = createBrowserRouter(
   createRoutesFromElements(
@@ -26,7 +26,7 @@ const loggenInRouter = createBrowserRouter(
       <Route path="dashboard" element={<Dashboard />} />
       <Route path="dashboard/:projectId" element={<Board />}>
         <Route path="m/:taskId" element={<ModalTask />} />
-        <Route path="share" element={<div>поделиться</div>} />
+        <Route path="s" element={<SettingsProject />} />
       </Route>
       <Route path="*" element={<Navigate to={"/"} />} />
     </Route>
@@ -45,16 +45,18 @@ const noLoggenInRouter = createBrowserRouter(
 
 const App = () => {
   const api = useCheckAuthUserQuery();
+  const { isLoadingFullScreen } = useAppSelector(selectCommon);
 
-  const router = useMemo(() => {
-    return api.data?.success ? loggenInRouter : noLoggenInRouter;
-  }, [api]);
+  if (api.isFetching) return <Spin spinning={api.isFetching} fullscreen />;
 
-  if (api.fulfilledTimeStamp) {
-    return <RouterProvider router={router} />;
-  }
-
-  return null;
+  return (
+    <>
+      <RouterProvider
+        router={api.isSuccess ? loggenInRouter : noLoggenInRouter}
+      />
+      <Spin spinning={isLoadingFullScreen} fullscreen />
+    </>
+  );
 };
 
 function Home() {
@@ -62,19 +64,15 @@ function Home() {
 }
 
 function Root() {
-  const { isLoadingFullScreen } = useAppSelector(selectCommon);
   return (
-    <>
-      <AppLayout>
-        <Layout hasSider={true}>
-          <Layout.Sider>
-            <SidebarMenu />
-          </Layout.Sider>
-          <Outlet />
-        </Layout>
-      </AppLayout>
-      <Spin spinning={isLoadingFullScreen} fullscreen />
-    </>
+    <AppLayout>
+      <Layout hasSider={true}>
+        <Layout.Sider>
+          <SidebarMenu />
+        </Layout.Sider>
+        <Outlet />
+      </Layout>
+    </AppLayout>
   );
 }
 

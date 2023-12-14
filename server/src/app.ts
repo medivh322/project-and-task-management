@@ -41,7 +41,7 @@ app.use(
   '/api',
   isValidToken,
   (req, res, next) => {
-    setTimeout(next, 2000);
+    setTimeout(next, 1000);
   },
   coreApiRouter,
 );

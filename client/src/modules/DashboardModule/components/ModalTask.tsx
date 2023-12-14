@@ -1,23 +1,17 @@
 import {
   Button,
   Col,
-  Flex,
   Form,
-  Image,
   Input,
-  List,
   Modal,
   Row,
   Skeleton,
-  Space,
   Typography,
 } from "antd";
 import { useNavigate, useParams } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import MenuActions from "./MenuActions";
 import {
-  useDeleteFileMutation,
-  useGetAttachmentsQuery,
   useGetTaskInfoQuery,
   useSaveTaskInfoMutation,
 } from "../../../redux/task/reducer";
@@ -29,16 +23,7 @@ const ModalTask = () => {
   const navigate = useNavigate();
 
   const params = useParams();
-  const {
-    data = {
-      result: {
-        name: "",
-        description: "",
-      },
-    },
-    isSuccess,
-    isError,
-  } = useGetTaskInfoQuery(
+  const { data, isSuccess, isError, isFetching } = useGetTaskInfoQuery(
     { taskId: params.taskId },
     {
       skip: !params.taskId,
@@ -50,7 +35,15 @@ const ModalTask = () => {
 
   const closeModal = async () => {
     const body = form.getFieldsValue(["name", "description"]);
-    if (!_.isEqual(_.pick(data.result, ["description", "name"]), body)) {
+    if (
+      !_.isEqual(
+        _.pick({ description: data?.description, name: data?.name }, [
+          "description",
+          "name",
+        ]),
+        body
+      )
+    ) {
       await save({ body, taskId: params.taskId });
     }
     navigate(-1);
@@ -59,12 +52,12 @@ const ModalTask = () => {
   return (
     <Form form={form}>
       <Modal
+        onOk={() => !isFetching && closeModal()}
+        onCancel={() => !isFetching && closeModal()}
         open
-        onOk={() => (!isLoadingSaveTask ? closeModal() : null)}
-        onCancel={() => (!isLoadingSaveTask ? closeModal() : null)}
         title={
           isSuccess ? (
-            <Form.Item name="name" initialValue={data?.result.name}>
+            <Form.Item name="name" initialValue={data?.name}>
               <Input
                 style={{
                   width: 400,
@@ -87,12 +80,11 @@ const ModalTask = () => {
         {isSuccess ? (
           <>
             описание:
-            <Form.Item
-              name="description"
-              initialValue={data.result.description}
-            >
+            <Form.Item name="description" initialValue={data.description}>
               <TextArea autoSize></TextArea>
             </Form.Item>
+            дата создания:
+            <Typography.Text>{data.date_start}</Typography.Text>
             <Row>
               <Col span={16}>
                 <Attachments taskId={params.taskId} />

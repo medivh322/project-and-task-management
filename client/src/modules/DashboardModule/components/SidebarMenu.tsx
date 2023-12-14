@@ -9,6 +9,7 @@ import {
   useAddListProjectsMutation,
   useGetListProjectsQuery,
 } from "../../../redux/kanban/reducer";
+import AddProjects from "./popovers/AddProject";
 
 const SidebarMenu: FC = () => {
   const { userId } = useAppSelector(selectKanban);
@@ -20,22 +21,12 @@ const SidebarMenu: FC = () => {
     isFetching,
     isError,
     currentData,
-    isSuccess,
   } = useGetListProjectsQuery(
     { userId },
     {
       skip: !userId,
     }
   );
-  const [
-    add,
-    {
-      data: dataCreateProject,
-      isLoading: loadingCreateProejct,
-      isError: failedToCreateProject,
-      isSuccess: projectSuccesffullyCreated,
-    },
-  ] = useAddListProjectsMutation();
 
   const handleClickMenuProjects = (e: any) => {
     navigate(`/dashboard/${e.key}`);
@@ -65,59 +56,7 @@ const SidebarMenu: FC = () => {
       ) : (
         <div>список проектов пуст</div>
       )}
-      <Popover
-        overlayStyle={{ width: "300px" }}
-        content={
-          <Form
-            onFinish={(value) => add({ userId, name: value.title })}
-            autoComplete="off"
-          >
-            {projectSuccesffullyCreated && (
-              <Alert
-                type="success"
-                showIcon
-                closable
-                message={dataCreateProject?.message}
-              />
-            )}
-            {failedToCreateProject && (
-              <Alert
-                type="error"
-                showIcon
-                closable
-                message="Ошибка"
-                description={dataCreateProject?.message}
-              />
-            )}
-            <Form.Item
-              rules={[{ required: true, message: "заполните поле" }]}
-              name="title"
-            >
-              <Input placeholder="название проекта" />
-            </Form.Item>
-            <Form.Item>
-              <Button
-                htmlType="submit"
-                type="primary"
-                loading={loadingCreateProejct}
-              >
-                создать
-              </Button>
-            </Form.Item>
-          </Form>
-        }
-        title="Создать проект"
-        trigger={"click"}
-      >
-        <Button
-          block
-          style={{
-            marginTop: 20,
-          }}
-        >
-          добавить проект
-        </Button>
-      </Popover>
+      <AddProjects userId={userId} />
     </>
   );
 };

@@ -1,12 +1,22 @@
+import { Category } from '@modelscategories.mode';
 import mongoose from 'mongoose';
 
 const ProjectSchema = new mongoose.Schema({
   name: String,
-  description: String,
-  status: Boolean,
+  description: { type: String, default: '' },
   date_start: { type: Date, default: Date.now },
   date_end: Date,
-  user_id: mongoose.Types.ObjectId,
+  members: [
+    {
+      user_id: mongoose.Types.ObjectId,
+      role: [String],
+    },
+  ],
+});
+
+ProjectSchema.pre('findOneAndDelete', async function () {
+  const { _id } = this.getQuery();
+  await Category.deleteMany({ project_id: _id });
 });
 
 const Project = mongoose.models.Project || mongoose.model('Project', ProjectSchema);

@@ -1,7 +1,9 @@
 import { Popover, Input, Button, Form } from "antd";
 import { useAddTaskMutation } from "../../../../redux/kanban/reducer";
+import { useParams } from "react-router-dom";
 
 const AddTask = ({ categoryId }: any) => {
+  const { projectId } = useParams();
   const [addTask, { isLoading: loadingAddTask }] = useAddTaskMutation();
 
   return (
@@ -12,6 +14,7 @@ const AddTask = ({ categoryId }: any) => {
             addTask({
               categoryId: categoryId,
               name: values.title,
+              projectId,
             })
           }
         >

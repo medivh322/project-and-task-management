@@ -13,9 +13,8 @@ export interface ErrorRes {
 
 const errorHandler = (errorRes: ErrorRes) => {
   const { error } = errorRes;
-  console.log(error);
   if (error && error.status) {
-    const errorText = codeMessage[error.status];
+    const errorText = error.data.message || codeMessage[error.status];
     const { status } = error;
     notification.config({
       duration: 5,

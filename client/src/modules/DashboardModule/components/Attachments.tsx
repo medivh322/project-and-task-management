@@ -14,13 +14,14 @@ const Attachments = ({ taskId }: any) => {
         skip: !taskId,
       }
     );
-  const [deleteFile] = useDeleteFileMutation();
+  const [deleteFile, { isLoading: loadingDeleteFile }] =
+    useDeleteFileMutation();
 
   return (
-    <Spin tip="загрузка..." spinning={fetchingAttachments}>
+    <Spin tip="загрузка..." spinning={fetchingAttachments || loadingDeleteFile}>
       <Typography.Text>вложения</Typography.Text>
       <List
-        dataSource={attachments?.result.attachment}
+        dataSource={attachments}
         renderItem={(image) => (
           <List.Item key={image._id}>
             <Space direction="horizontal" style={{ alignItems: "start" }}>

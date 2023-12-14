@@ -1,9 +1,7 @@
-import { Space, Button, Layout, List, Menu, Popover } from "antd";
+import { Space, Button, Layout } from "antd";
 import { Link, Outlet, useParams } from "react-router-dom";
-import { v4 } from "uuid";
 import { useGetProjectBoardQuery } from "../../../redux/kanban/reducer";
 import CategoryTable from "./CategoryTable";
-import SettingsProject from "./popovers/SettingsProject";
 import AddCategory from "./popovers/AddCategory";
 const Board = () => {
   const params = useParams();
@@ -20,55 +18,42 @@ const Board = () => {
   return (
     <Layout.Content style={{ overflowX: "auto" }}>
       <Layout>
-        <List
-          itemLayout="horizontal"
-          dataSource={[
-            {
-              name: "настройки",
-            },
-          ]}
-          renderItem={(item) => {
-            return (
-              <Popover
-                content={
-                  <Menu
-                    items={[
-                      {
-                        key: v4(),
-                        label: <SettingsProject paramId={params.projectId} />,
-                        title: "закрыть доску",
-                      },
-                      {
-                        key: v4(),
-                        label: <Link to={"share"}>поделиться</Link>,
-                        title: "поделиться",
-                      },
-                    ]}
-                  />
-                }
-                title="настройки"
-              >
-                <Button>{item.name}</Button>
-              </Popover>
-            );
-          }}
-        />
+        <Button>
+          <Link to={"s"}>Настройки</Link>
+        </Button>
       </Layout>
-      {projectApi.data?.result !== null ? (
-        <div>
-          <Space size={35} align="start" style={{ marginRight: "400px" }}>
-            {projectApi.data?.result.map((category: any) => (
-              <CategoryTable category={category} key={category._id} />
-            ))}
-            <AddCategory projectId={params.projectId} />
-          </Space>
-          <Outlet />
-        </div>
-      ) : (
-        <div>не найдено, добавьте категорию</div>
-      )}
+      <Space size={35} align="start" style={{ marginRight: "400px" }}>
+        {projectApi.data?.result &&
+          projectApi.data?.result.map((category: any) => (
+            <CategoryTable category={category} key={category._id} />
+          ))}
+        <AddCategory projectId={params.projectId} />
+      </Space>
+      <Outlet />
     </Layout.Content>
   );
 };
+// <Popover
+//   content={
+//     <Menu
+//       items={[
+//         {
+//           key: v4(),
+//           label: <SettingsProject paramId={params.projectId} />,
+//           title: "закрыть доску",
+//         },
+//         {
+//           key: v4(),
+//           label: <Link to={"share"}>поделиться</Link>,
+//           title: "поделиться",
+//         },
+//       ]}
+//     />
+//   }
+//   trigger={"click"}
+//   title="настройки"
+// >
+//   <Button>{item.name}</Button>
+// </Popover>
 
 export default Board;

@@ -4,6 +4,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
 import { commonReducerAction } from "../common/reducer";
+import { Key } from "antd/es/table/interface";
 
 interface IKanban {
   userId: string | null;
@@ -34,19 +35,38 @@ export const projectsApi = createApi({
     baseUrl: `${API_BASE_URL}`,
     credentials: "include",
   }),
-  tagTypes: ["Projects", "Categories"],
+  tagTypes: ["Projects", "Categories", "Members"],
   endpoints: (builder) => ({
+    checkAccessRole: builder.query<
+      void,
+      {
+        projectId: string | undefined;
+        userId: string | null;
+        accessRole: string;
+      }
+    >({
+      query: ({ userId, projectId, accessRole }) => ({
+        url: `role`,
+        body: {
+          userId,
+          projectId,
+          accessRole,
+        },
+        method: "POST",
+      }),
+    }),
     addTask: builder.mutation<
       { status: string },
-      { categoryId: string | null; name: string }
+      { categoryId: string | null; name: string; projectId: string | undefined }
     >({
-      query({ name, categoryId }) {
+      query({ name, categoryId, projectId }) {
         return {
           url: "tasks",
           method: "POST",
           body: {
             name,
             categoryId,
+            projectId,
           },
         };
       },
@@ -82,23 +102,25 @@ export const projectsApi = createApi({
       invalidatesTags: ["Projects"],
     }),
     deleteProject: builder.mutation<
-      { message?: string },
-      { projectId?: string }
+      void,
+      { projectId?: string; userId: string | null }
     >({
-      query({ projectId }) {
+      query({ projectId, userId }) {
         return {
           url: "projects/" + projectId,
+          body: {
+            projectId,
+            userId,
+          },
           method: "DELETE",
         };
       },
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
         try {
           await queryFulfilled;
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
       },
       invalidatesTags: (result) =>
         typeof result !== "undefined" ? ["Projects"] : [],
@@ -114,6 +136,84 @@ export const projectsApi = createApi({
         };
       },
       providesTags: ["Categories"],
+    }),
+    shareMembers: builder.mutation<
+      void,
+      { membersArray: Key[]; projectId: string | undefined }
+    >({
+      query({ membersArray, projectId }) {
+        return {
+          url: "projects/share",
+          method: "POST",
+          body: {
+            membersArray,
+            projectId,
+          },
+        };
+      },
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+      invalidatesTags: ["Members"],
+    }),
+    searchMembers: builder.mutation<
+      {
+        key: string;
+        name: string;
+      }[],
+      { query: string; projectId: string | undefined }
+    >({
+      query({ query, projectId }) {
+        return {
+          url: "projects/s/members",
+          method: "GET",
+          params: {
+            query,
+            id: projectId,
+          },
+        };
+      },
+      transformResponse: (response: {
+        members: {
+          _id: string;
+          login: string;
+        }[];
+      }) => {
+        const membersDataForTable = response.members.map((member) => ({
+          name: member.login,
+          key: member._id,
+        }));
+        return membersDataForTable;
+      },
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+    }),
+    getMembersProject: builder.query<
+      {
+        _id: string;
+        name: string;
+      }[],
+      { projectId: string | undefined }
+    >({
+      query({ projectId }) {
+        return {
+          url: "projects/members/" + projectId,
+          method: "GET",
+        };
+      },
+      transformResponse: (response: {
+        members: { _id: string; name: string }[];
+      }) => response.members,
+      providesTags: ["Members"],
     }),
     addCategory: builder.mutation<
       { status: string },
@@ -171,6 +271,10 @@ export const {
   useAddTaskMutation,
   useAddCategoryMutation,
   useDeleteCategoryMutation,
+  useSearchMembersMutation,
+  useShareMembersMutation,
+  useGetMembersProjectQuery,
+  useCheckAccessRoleQuery,
 } = projectsApi;
 export const kanbanReducerState = kanbanSlice.getInitialState;
 export const kanbanActions = kanbanSlice.actions;

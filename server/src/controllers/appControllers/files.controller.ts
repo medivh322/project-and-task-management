@@ -20,7 +20,7 @@ const uploadFilesTask = async (req: any, res: any) => {
         { _id: id },
         {
           $push: {
-            attachment: {
+            attachments: {
               url: req.protocol + '://' + req.get('host') + '/api/download/file/' + writestream.id,
               name: name,
               file_id: new mongoose.mongo.ObjectId(writestream.id),

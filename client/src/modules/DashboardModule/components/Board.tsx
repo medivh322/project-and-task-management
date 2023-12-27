@@ -1,11 +1,11 @@
 import { Space, Button, Layout } from "antd";
 import { Link, Outlet, useParams } from "react-router-dom";
 import { useGetProjectBoardQuery } from "../../../redux/kanban/reducer";
-import CategoryTable from "./CategoryTable";
 import AddCategory from "./popovers/AddCategory";
+import CategoryTable from "./CategoryTable";
 const Board = () => {
   const params = useParams();
-  const projectApi = useGetProjectBoardQuery(
+  const { data: categories, isFetching: loading } = useGetProjectBoardQuery(
     { projectId: params.projectId },
     {
       skip: !params.projectId,
@@ -13,22 +13,26 @@ const Board = () => {
     }
   );
 
-  if (projectApi.isFetching) return <div>загрузка...</div>;
+  if (loading) return <div>загрузка...</div>;
+
+  // console.log(data);
 
   return (
     <Layout.Content style={{ overflowX: "auto" }}>
-      <Layout>
+      <Space>
         <Button>
           <Link to={"s"}>Настройки</Link>
         </Button>
-      </Layout>
-      <Space size={35} align="start" style={{ marginRight: "400px" }}>
-        {projectApi.data?.result &&
-          projectApi.data?.result.map((category: any) => (
-            <CategoryTable category={category} key={category._id} />
-          ))}
-        <AddCategory projectId={params.projectId} />
       </Space>
+      <Layout style={{ marginTop: "10px" }}>
+        <Space size={35} align="start" style={{ marginRight: "400px" }}>
+          {!!categories?.length &&
+            categories.map((category) => (
+              <CategoryTable category={category} key={category._id} />
+            ))}
+          <AddCategory projectId={params.projectId} />
+        </Space>
+      </Layout>
       <Outlet />
     </Layout.Content>
   );

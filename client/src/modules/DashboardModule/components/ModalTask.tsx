@@ -1,13 +1,17 @@
 import {
   Button,
   Col,
+  DatePicker,
+  Flex,
   Form,
   Input,
   Modal,
   Row,
   Skeleton,
+  Space,
   Typography,
 } from "antd";
+import type { DatePickerProps, RangePickerProps } from "antd/es/date-picker";
 import { useNavigate, useParams } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import MenuActions from "./MenuActions";
@@ -17,16 +21,17 @@ import {
 } from "../../../redux/task/reducer";
 import _ from "lodash";
 import Attachments from "./Attachments";
+import { Task } from "../../../types/models";
 
 const ModalTask = () => {
-  const [form] = Form.useForm<{ name: string; description: string }>();
+  const [form] = Form.useForm<Pick<Task, "name" | "description">>();
   const navigate = useNavigate();
+  const { taskId } = useParams();
 
-  const params = useParams();
   const { data, isSuccess, isError, isFetching } = useGetTaskInfoQuery(
-    { taskId: params.taskId },
+    { taskId: taskId },
     {
-      skip: !params.taskId,
+      skip: !taskId,
       refetchOnMountOrArgChange: true,
     }
   );
@@ -44,7 +49,7 @@ const ModalTask = () => {
         body
       )
     ) {
-      await save({ body, taskId: params.taskId });
+      await save({ body, taskId: taskId });
     }
     navigate(-1);
   };
@@ -70,7 +75,9 @@ const ModalTask = () => {
         }
         footer={
           isSuccess ? (
-            <Button loading={isLoadingSaveTask}>Cancel</Button>
+            <Button loading={isLoadingSaveTask}>
+              {isLoadingSaveTask ? "идет сохранение..." : "Закрыть окно"}
+            </Button>
           ) : !isError ? (
             <Skeleton.Button />
           ) : null
@@ -83,11 +90,16 @@ const ModalTask = () => {
             <Form.Item name="description" initialValue={data.description}>
               <TextArea autoSize></TextArea>
             </Form.Item>
-            дата создания:
-            <Typography.Text>{data.date_start}</Typography.Text>
+            <Space direction="vertical">
+              <p>Дата создания: {data.date_start}</p>
+            </Space>
+            {/* <Space size={[5, 0]}>
+              <Typography.Text>дата создания:</Typography.Text>
+              <Typography.Text>{data.date_start}</Typography.Text>
+            </Space> */}
             <Row>
               <Col span={16}>
-                <Attachments taskId={params.taskId} />
+                <Attachments taskId={taskId} />
               </Col>
               <Col span={8}>
                 <MenuActions />

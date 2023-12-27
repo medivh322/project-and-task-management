@@ -11,13 +11,13 @@ import Board from "./modules/DashboardModule/components/Board";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
 import { Layout, Spin } from "antd";
-import AppLayout from "./layouts/App";
 import ModalTask from "./modules/DashboardModule/components/ModalTask";
 import SidebarMenu from "./modules/DashboardModule/components/SidebarMenu";
 import { useCheckAuthUserQuery } from "./redux/sign/reducer";
 import { useAppSelector } from "./redux/store";
 import { selectCommon } from "./redux/common/selectors";
 import SettingsProject from "./modules/DashboardModule/components/SettingsProject";
+import { Content } from "antd/es/layout/layout";
 
 const loggenInRouter = createBrowserRouter(
   createRoutesFromElements(
@@ -65,14 +65,14 @@ function Home() {
 
 function Root() {
   return (
-    <AppLayout>
-      <Layout hasSider={true}>
-        <Layout.Sider>
-          <SidebarMenu />
-        </Layout.Sider>
+    <Layout hasSider={true} style={{ height: "100vh" }}>
+      <Layout.Sider>
+        <SidebarMenu />
+      </Layout.Sider>
+      <Content style={{ padding: "10px" }}>
         <Outlet />
-      </Layout>
-    </AppLayout>
+      </Content>
+    </Layout>
   );
 }
 

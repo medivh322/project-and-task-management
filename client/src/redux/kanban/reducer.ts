@@ -5,6 +5,7 @@ import { API_BASE_URL } from "../../config/serverApiConfig";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
 import { commonReducerAction } from "../common/reducer";
 import { Key } from "antd/es/table/interface";
+import { Category } from "../../types/models";
 
 interface IKanban {
   userId: string | null;
@@ -126,7 +127,7 @@ export const projectsApi = createApi({
         typeof result !== "undefined" ? ["Projects"] : [],
     }),
     getProjectBoard: builder.query<
-      { message?: string; result: any[] | null },
+      Category[],
       { projectId: string | undefined }
     >({
       query({ projectId }) {
@@ -135,6 +136,7 @@ export const projectsApi = createApi({
           method: "GET",
         };
       },
+      transformResponse: (response: { result: Category[] }) => response.result,
       providesTags: ["Categories"],
     }),
     shareMembers: builder.mutation<

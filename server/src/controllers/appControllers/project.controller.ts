@@ -66,24 +66,39 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         },
       },
       {
-        $project: {
-          name: 1,
+        $unwind: '$tasks',
+      },
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'tasks.members.userId',
+          foreignField: '_id',
+          as: 'taskMembers',
+        },
+      },
+      {
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
           tasks: {
-            $map: {
-              input: '$tasks',
-              as: 'task',
-              in: {
-                _id: '$$task._id',
-                name: '$$task.name',
-              },
+            $push: {
+              _id: '$tasks._id',
+              name: '$tasks.name',
+              members: '$taskMembers.name',
             },
           },
+        },
+      },
+      {
+        $project: {
+          name: 1,
+          tasks: 1,
         },
       },
     ]);
     res.status(200).json({
       success: true,
-      result: projectInfoForKanban.length ? projectInfoForKanban : null,
+      result: projectInfoForKanban,
       message: 'информация успешно получена',
     });
   } catch (error: any) {

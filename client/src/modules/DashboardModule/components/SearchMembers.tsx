@@ -25,7 +25,6 @@ const SearchMembers = () => {
     reset();
   }, [successSetMember]);
 
-  console.log(membersTask);
   return (
     <div>
       <Input.Search

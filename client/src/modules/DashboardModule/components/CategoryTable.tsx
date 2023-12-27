@@ -1,12 +1,14 @@
-import { Card, Flex, Typography } from "antd";
+import { Avatar, Card, Flex, List, Typography } from "antd";
 import { Link } from "react-router-dom";
 import AddTask from "./popovers/AddTask";
 import SettingsCategory from "./popovers/SettingsCategory";
+import { FC } from "react";
+import { Category } from "../../../types/models";
+import { UserOutlined } from "@ant-design/icons";
 
-const CategoryTable = ({ category }: any) => {
+const CategoryTable: FC<{ category: Category }> = ({ category }) => {
   return (
     <Card
-      key={category._id}
       title={
         <Flex justify="space-between" align="center">
           <Typography.Text>{category.name}</Typography.Text>
@@ -15,14 +17,26 @@ const CategoryTable = ({ category }: any) => {
       }
       style={{ width: 350 }}
     >
-      {category.tasks && (
-        <Flex vertical>
-          {category.tasks.map((task: any) => (
-            <Link key={task._id} to={"m/" + task._id}>
-              {task.name}
+      {!!category.tasks.length && (
+        <List
+          itemLayout="horizontal"
+          dataSource={category.tasks}
+          renderItem={(item) => (
+            <Link key={item._id} to={"m/" + item._id}>
+              <List.Item key={item._id}>
+                <List.Item.Meta
+                  avatar={<Avatar icon={<UserOutlined />} />}
+                  title={item.name}
+                  description={
+                    item.members.length
+                      ? item.members.map((member) => member.name)
+                      : "нет исполнителей"
+                  }
+                />
+              </List.Item>
             </Link>
-          ))}
-        </Flex>
+          )}
+        />
       )}
       {<AddTask categoryId={category._id} />}
     </Card>

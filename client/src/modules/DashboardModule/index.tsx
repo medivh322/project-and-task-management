@@ -1,7 +1,7 @@
 import { FC } from "react";
 
 const DashboardModule: FC = () => {
-  return <div>список проектов...</div>;
+  return <div>выберите проект</div>;
 };
 
 export default DashboardModule;

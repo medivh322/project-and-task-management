@@ -1,4 +1,4 @@
-import { Avatar, Card, Flex, List, Typography } from "antd";
+import { Avatar, Card, Col, Flex, List, Row, Typography } from "antd";
 import { Link } from "react-router-dom";
 import AddTask from "./popovers/AddTask";
 import SettingsCategory from "./popovers/SettingsCategory";
@@ -23,17 +23,29 @@ const CategoryTable: FC<{ category: Category }> = ({ category }) => {
           dataSource={category.tasks}
           renderItem={(item) => (
             <Link key={item._id} to={"m/" + item._id}>
-              <List.Item key={item._id}>
-                <List.Item.Meta
-                  avatar={<Avatar icon={<UserOutlined />} />}
-                  title={item.name}
-                  description={
-                    item.members.length
-                      ? item.members.map((member) => member.name)
-                      : "нет исполнителей"
-                  }
-                />
-              </List.Item>
+              <Card bodyStyle={{ padding: "10px 15px" }}>
+                <List.Item
+                  key={item._id}
+                  style={{ display: "block", padding: 0 }}
+                >
+                  <Row>
+                    <Col span={24}>
+                      <List.Item.Meta
+                        avatar={<Avatar icon={<UserOutlined />} />}
+                        title={item.name}
+                        description={
+                          item.members.length
+                            ? item.members
+                            : "нет исполнителей"
+                        }
+                      />
+                    </Col>
+                    <Col span={24}>
+                      статус: {item.status === "open" ? "открыто" : "закрыто"}
+                    </Col>
+                  </Row>
+                </List.Item>
+              </Card>
             </Link>
           )}
         />

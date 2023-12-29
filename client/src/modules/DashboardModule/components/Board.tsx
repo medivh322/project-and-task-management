@@ -15,8 +15,6 @@ const Board = () => {
 
   if (loading) return <div>загрузка...</div>;
 
-  // console.log(data);
-
   return (
     <Layout.Content style={{ overflowX: "auto" }}>
       <Space>

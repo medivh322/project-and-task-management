@@ -4,7 +4,13 @@ import {
   useGetAttachmentsQuery,
 } from "../../../redux/task/reducer";
 
-const Attachments = ({ taskId }: any) => {
+const Attachments = ({
+  taskId,
+  closed,
+}: {
+  taskId: string | undefined;
+  closed: boolean;
+}) => {
   const { data: attachments, isFetching: fetchingAttachments } =
     useGetAttachmentsQuery(
       {
@@ -33,14 +39,16 @@ const Attachments = ({ taskId }: any) => {
                     дата загрузки: {image.date_upload}
                   </Typography.Text>
                 </Flex>
-                <div>
-                  <Button
-                    size="small"
-                    onClick={() => deleteFile({ fileId: image.file_id })}
-                  >
-                    удалить
-                  </Button>
-                </div>
+                {!closed && (
+                  <div>
+                    <Button
+                      size="small"
+                      onClick={() => deleteFile({ fileId: image.file_id })}
+                    >
+                      удалить
+                    </Button>
+                  </div>
+                )}
               </div>
             </Space>
           </List.Item>

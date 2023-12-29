@@ -4,13 +4,14 @@ import {
   projectCreate,
   getProjectsList,
   getCurrentProjectInfo,
+  getMembersProject,
   deleteProject,
   searchMembers,
   shareMembers,
-  getMembersProject,
 } from '@controllersappControllers/project.controller';
 import {
   changeStatus,
+  closeTask,
   deleteTask,
   fileFilesFromAttachments,
   getAttachments,
@@ -47,7 +48,7 @@ router.post('/projects/share', catchErrors(shareMembers));
 router.get('/projects/s/members', catchErrors(searchMembers));
 router.get('/projects/getlist/:id', catchErrors(getProjectsList));
 router.get('/projects/:id', catchErrors(getCurrentProjectInfo));
-router.get('/projects/members/:id', catchErrors(getMembersProject));
+router.get('/projects/members/:projectId', catchErrors(getMembersProject));
 router.delete('/projects/:id', catchErrors(deleteProject));
 
 router.post('/categories', catchErrors(categoryCreate));
@@ -62,6 +63,7 @@ router.get('/tasks/statuses/:projectId/:taskId', catchErrors(getTasksStatuses));
 router.get('/tasks/s/members', catchErrors(searchTaskMembers));
 router.get('/tasks/members/:taskId', catchErrors(getTaskMembers));
 router.put('/tasks/:id', catchErrors(saveTask));
+router.put('/tasks/c/:id', catchErrors(closeTask));
 router.delete('/tasks/:id', catchErrors(deleteTask));
 
 router.post('/upload/:id', upload.single('file'), catchErrors(uploadFilesTask));

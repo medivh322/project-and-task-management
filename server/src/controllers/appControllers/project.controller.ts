@@ -58,6 +58,9 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         $match: { project_id: new mongoose.Types.ObjectId(id) },
       },
       {
+        $sort: { createdAt: 1 }, // или -1 для сортировки от новых к старым
+      },
+      {
         $lookup: {
           from: 'tasks',
           localField: '_id',
@@ -66,12 +69,12 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         },
       },
       {
-        $unwind: '$tasks',
+        $unwind: { path: '$tasks', preserveNullAndEmptyArrays: true },
       },
       {
         $lookup: {
           from: 'users',
-          localField: 'tasks.members.userId',
+          localField: 'tasks.members.user_id',
           foreignField: '_id',
           as: 'taskMembers',
         },
@@ -82,9 +85,16 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
           name: { $first: '$name' },
           tasks: {
             $push: {
-              _id: '$tasks._id',
-              name: '$tasks.name',
-              members: '$taskMembers.name',
+              $cond: {
+                if: { $eq: ['$tasks', {}] },
+                then: '$$REMOVE',
+                else: {
+                  _id: '$tasks._id',
+                  name: '$tasks.name',
+                  status: '$tasks.status',
+                  members: { $map: { input: '$taskMembers', as: 'member', in: '$$member.login' } },
+                },
+              },
             },
           },
         },
@@ -92,7 +102,13 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
       {
         $project: {
           name: 1,
-          tasks: 1,
+          tasks: {
+            $filter: {
+              input: '$tasks',
+              as: 'task',
+              cond: { $gt: ['$$task._id', null] }, // Фильтруем задачи, убедившись, что у них есть _id
+            },
+          },
         },
       },
     ]);
@@ -219,81 +235,66 @@ const searchMembers = async (req: express.Request, res: express.Response) => {
 
 const getMembersProject = async (req: express.Request, res: express.Response) => {
   try {
-    const { id } = req.params;
+    const { projectId } = req.params;
 
-    const members = await User.aggregate([
+    const members = await Project.aggregate([
+      {
+        $match: { _id: new mongoose.Types.ObjectId(projectId as string) },
+      },
       {
         $lookup: {
-          from: 'projects',
-          let: {
-            userId: '$_id',
-            login: '$login',
-          },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [
-                    {
-                      $eq: ['$_id', new mongoose.Types.ObjectId(id as string)],
-                    },
-                    {
-                      $in: ['$$userId', '$members.user_id'],
-                    },
-                  ],
-                },
-              },
-            },
-            {
-              $addFields: {
+          from: 'users',
+          localField: 'members.user_id',
+          foreignField: '_id',
+          as: 'projectMembers',
+        },
+      },
+      {
+        $project: {
+          members: {
+            $map: {
+              input: '$projectMembers',
+              as: 'member',
+              in: {
+                key: '$$member._id',
+                name: '$$member.login',
                 role: {
-                  $map: {
-                    input: '$members',
-                    as: 'member',
+                  $let: {
+                    vars: {
+                      memberRole: {
+                        $arrayElemAt: [
+                          {
+                            $filter: {
+                              input: '$members',
+                              as: 'projMember',
+                              cond: { $eq: ['$$projMember.user_id', '$$member._id'] },
+                            },
+                          },
+                          0,
+                        ],
+                      },
+                    },
                     in: {
-                      $cond: {
-                        if: { $eq: ['$$member.user_id', '$$userId'] },
-                        then: { $arrayElemAt: ['$$member.role', 0] },
-                        else: '',
+                      $switch: {
+                        branches: [
+                          { case: { $in: ['Admin', '$$memberRole.role'] }, then: 'Администратор' },
+                          { case: { $in: ['User', '$$memberRole.role'] }, then: 'Пользователь' },
+                        ],
+                        default: 'Роль не найдена',
                       },
                     },
                   },
                 },
               },
             },
-          ],
-          as: 'matching_docs',
-        },
-      },
-      {
-        $unwind: '$matching_docs',
-      },
-      {
-        $match: {
-          matching_docs: { $ne: [] },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          key: '$_id',
-          name: '$login',
-          matching_docs: 1,
-          role: {
-            $switch: {
-              branches: [
-                { case: { $in: ['Admin', '$matching_docs.role'] }, then: 'Администратор' },
-                { case: { $in: ['User', '$matching_docs.role'] }, then: 'Пользователь' },
-              ],
-              default: 'Роль не найдена',
-            },
           },
         },
       },
     ]);
+
     res.status(200).json({
       success: true,
-      members,
+      members: members[0].members,
     });
   } catch (error: any) {
     res.status(500).json({
@@ -305,11 +306,11 @@ const getMembersProject = async (req: express.Request, res: express.Response) =>
 };
 
 export {
-  projectCreate,
   getProjectsList,
   getCurrentProjectInfo,
+  getMembersProject,
+  projectCreate,
   deleteProject,
   searchMembers,
   shareMembers,
-  getMembersProject,
 };

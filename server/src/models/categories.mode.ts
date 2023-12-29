@@ -4,6 +4,10 @@ import mongoose from 'mongoose';
 const CategorySchema = new mongoose.Schema({
   name: String,
   project_id: mongoose.Types.ObjectId,
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
 CategorySchema.pre('findOneAndDelete', async function () {

@@ -4,6 +4,7 @@ import errorHandler, { ErrorRes } from "../../request/errorHundler";
 import { projectsApi } from "../kanban/reducer";
 import { commonReducerAction } from "../common/reducer";
 import { Key } from "antd/es/table/interface";
+import { Task } from "../../types/models";
 
 const taskApi = createApi({
   reducerPath: "task",
@@ -14,11 +15,7 @@ const taskApi = createApi({
   tagTypes: ["Task", "Attachments", "Members"],
   endpoints: (builder) => ({
     getTaskInfo: builder.query<
-      {
-        name: string;
-        description: string;
-        date_start: string;
-      },
+      Pick<Task, "name" | "description" | "date_start" | "date_end" | "status">,
       { taskId: string | undefined }
     >({
       query: ({ taskId }) => ({
@@ -26,31 +23,15 @@ const taskApi = createApi({
         method: "GET",
       }),
       transformResponse: (response: {
-        task: {
-          name: string;
-          description: string;
-          date_start: string;
-        };
-      }) => {
-        const originalDate = new Date(response.task.date_start);
-        return {
-          ...response.task,
-          date_start: `${originalDate.getFullYear()}-${(
-            originalDate.getMonth() + 1
-          )
-            .toString()
-            .padStart(2, "0")}-${originalDate
-            .getDate()
-            .toString()
-            .padStart(2, "0")}`,
-        };
-      },
+        task: Pick<
+          Task,
+          "name" | "description" | "date_start" | "date_end" | "status"
+        >;
+      }) => response.task,
       keepUnusedDataFor: 0,
     }),
     saveTaskInfo: builder.mutation<
-      {
-        success: boolean;
-      },
+      void,
       {
         taskId: string | undefined;
         body: {
@@ -67,6 +48,25 @@ const taskApi = createApi({
       async onQueryStarted(arg, { queryFulfilled }) {
         try {
           await queryFulfilled;
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+    }),
+    closeTask: builder.mutation<
+      void,
+      {
+        taskId: string | undefined;
+      }
+    >({
+      query: ({ taskId }) => ({
+        url: "tasks/c/" + taskId,
+        method: "PUT",
+      }),
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          await queryFulfilled;
+          dispatch(projectsApi.util.invalidateTags(["Categories"]));
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
@@ -259,6 +259,7 @@ export const {
   useGetAttachmentsQuery,
   useUploadFileMutation,
   useDeleteFileMutation,
+  useCloseTaskMutation,
   useDeleteTaskMutation,
   useGetStatusesQuery,
   useChangeStatusMutation,

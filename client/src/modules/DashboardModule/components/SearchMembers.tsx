@@ -23,7 +23,7 @@ const SearchMembers = () => {
 
   useEffect(() => {
     reset();
-  }, [successSetMember]);
+  }, [reset, successSetMember]);
 
   return (
     <div>
@@ -59,7 +59,7 @@ const SearchMembers = () => {
         loading={fetchMember}
         title={() => (
           <Typography.Text style={{ textAlign: "center", display: "block" }}>
-            Добавленные пользователи
+            Добавленные исполнители
           </Typography.Text>
         )}
         showHeader={false}

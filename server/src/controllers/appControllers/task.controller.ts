@@ -1,6 +1,6 @@
 import { Category } from '@modelscategories.mode';
 import { Project } from '@modelsproject.model';
-import { Task } from '@modelstask.model';
+import { Task, TaskType } from '@modelstask.model';
 import express from 'express';
 import mongoose from 'mongoose';
 import { GridFSBucket } from 'src';
@@ -32,10 +32,11 @@ const getTask = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    const task = await Task.findById(id, 'name description date_start').select({
+    const task = await Task.findById(id, 'name description date_start date_end').select({
       name: 1,
       description: 1,
       date_start: 1,
+      status: 1,
     });
 
     res.status(200).json({
@@ -50,13 +51,14 @@ const getTask = async (req: express.Request, res: express.Response) => {
 const saveTask = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    const { name, description } = req.body;
+    const { name, description, date_end } = req.body;
 
     const task = await Task.updateOne(
       { _id: id },
       {
         name,
         description,
+        date_end,
       },
       {
         returnOriginal: false,
@@ -64,6 +66,19 @@ const saveTask = async (req: express.Request, res: express.Response) => {
       },
     );
 
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '', error });
+  }
+};
+
+const closeTask = async (req: express.Request, res: express.Response) => {
+  try {
+    const { id } = req.params;
+    // await Task.findOneAndDelete({ _id: id });
+    await Task.findOneAndUpdate<TaskType>({ _id: id }, { date_end: Date.now(), status: 'close' });
     res.status(200).json({
       success: true,
     });
@@ -332,10 +347,11 @@ export {
   saveTask,
   getAttachments,
   fileFilesFromAttachments,
-  deleteTask,
+  closeTask,
   getTasksStatuses,
   changeStatus,
   searchTaskMembers,
   setMembers,
   getTaskMembers,
+  deleteTask,
 };

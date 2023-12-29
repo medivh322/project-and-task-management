@@ -1,14 +1,19 @@
-import mongoose from 'mongoose';
+import mongoose, { InferSchemaType } from 'mongoose';
 import express from 'express';
 import { GridFSBucket } from 'src';
 
 const TaskSchema = new mongoose.Schema({
   name: String,
+  status: {
+    type: String,
+    default: 'open',
+  },
   description: { type: String, default: '' },
   category_id: mongoose.Types.ObjectId,
   project_id: mongoose.Types.ObjectId,
   date_start: { type: Date, default: Date.now },
   date_end: Date,
+  date_closed: Date,
   members: [
     {
       user_id: mongoose.Types.ObjectId,
@@ -23,6 +28,8 @@ const TaskSchema = new mongoose.Schema({
     },
   ],
 });
+
+export type TaskType = InferSchemaType<typeof TaskSchema>;
 
 TaskSchema.pre('findOneAndDelete', async function () {
   const { attachments } = await this.model.findOne(this.getQuery()).select('attachments');

@@ -201,8 +201,9 @@ export const projectsApi = createApi({
     }),
     getMembersProject: builder.query<
       {
-        _id: string;
         name: string;
+        key: string;
+        role: string;
       }[],
       { projectId: string | undefined }
     >({
@@ -213,7 +214,11 @@ export const projectsApi = createApi({
         };
       },
       transformResponse: (response: {
-        members: { _id: string; name: string }[];
+        members: {
+          name: string;
+          key: string;
+          role: string;
+        }[];
       }) => response.members,
       providesTags: ["Members"],
     }),

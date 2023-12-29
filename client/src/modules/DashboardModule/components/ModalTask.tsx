@@ -1,4 +1,5 @@
 import {
+  Alert,
   Button,
   Col,
   DatePicker,
@@ -19,12 +20,21 @@ import {
   useGetTaskInfoQuery,
   useSaveTaskInfoMutation,
 } from "../../../redux/task/reducer";
-import _ from "lodash";
+import _, { isDate } from "lodash";
 import Attachments from "./Attachments";
 import { Task } from "../../../types/models";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import { useMemo } from "react";
+import { isTaskOverdue } from "../../../helper";
+
+dayjs.extend(utc);
 
 const ModalTask = () => {
-  const [form] = Form.useForm<Pick<Task, "name" | "description">>();
+  const [form] =
+    Form.useForm<
+      Pick<Task, "name" | "description" | "date_end" | "date_start">
+    >();
   const navigate = useNavigate();
   const { taskId } = useParams();
 
@@ -38,27 +48,43 @@ const ModalTask = () => {
 
   const [save, { isLoading: isLoadingSaveTask }] = useSaveTaskInfoMutation();
 
-  const closeModal = async () => {
-    const body = form.getFieldsValue(["name", "description"]);
+  const closeModal = async (closed: boolean) => {
+    const pickParameters = ["description", "name", "date_end"];
+    const body = form.getFieldsValue(pickParameters);
+    body.date_end = dayjs(body.date_end[1]).isValid()
+      ? dayjs(body.date_end[1]).utc().format()
+      : "";
     if (
       !_.isEqual(
-        _.pick({ description: data?.description, name: data?.name }, [
-          "description",
-          "name",
-        ]),
+        _.pick(
+          {
+            description: data?.description,
+            name: data?.name,
+            date_end: data?.date_end,
+          },
+          pickParameters
+        ),
         body
-      )
+      ) &&
+      !closed
     ) {
       await save({ body, taskId: taskId });
     }
     navigate(-1);
   };
 
+  const isOverdue = useMemo(
+    () => isTaskOverdue(data?.date_start),
+    [data?.date_start]
+  );
+
+  const closed = data?.status === "close";
+
   return (
-    <Form form={form}>
+    <Form form={form} disabled={closed}>
       <Modal
-        onOk={() => !isFetching && closeModal()}
-        onCancel={() => !isFetching && closeModal()}
+        onOk={() => !isFetching && closeModal(closed)}
+        onCancel={() => !isFetching && closeModal(closed)}
         open
         title={
           isSuccess ? (
@@ -90,20 +116,31 @@ const ModalTask = () => {
             <Form.Item name="description" initialValue={data.description}>
               <TextArea autoSize></TextArea>
             </Form.Item>
-            <Space direction="vertical">
-              <p>Дата создания: {data.date_start}</p>
+            <Space align="center" style={{ marginBottom: "20px" }}>
+              <p style={{ margin: 0 }}>Дата создания/завершения</p>
+              <Form.Item
+                name="date_end"
+                style={{ margin: 0 }}
+                initialValue={[
+                  dayjs(data.date_start),
+                  dayjs(data.date_end).isValid() ? dayjs(data.date_end) : false,
+                ]}
+              >
+                <DatePicker.RangePicker disabled={[true, closed]} />
+              </Form.Item>
             </Space>
-            {/* <Space size={[5, 0]}>
-              <Typography.Text>дата создания:</Typography.Text>
-              <Typography.Text>{data.date_start}</Typography.Text>
-            </Space> */}
-            <Row>
+            {isOverdue && (
+              <Alert showIcon type="warning" message="Задача просрочена" />
+            )}
+            <Row style={{ marginTop: 20 }}>
               <Col span={16}>
-                <Attachments taskId={taskId} />
+                <Attachments taskId={taskId} closed={closed} />
               </Col>
-              <Col span={8}>
-                <MenuActions />
-              </Col>
+              {!closed && (
+                <Col span={8}>
+                  <MenuActions />
+                </Col>
+              )}
             </Row>
           </>
         ) : !isError ? (

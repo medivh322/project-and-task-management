@@ -1,5 +1,6 @@
 import { UploadOutlined } from "@ant-design/icons";
 import {
+  Alert,
   Button,
   Collapse,
   Flex,
@@ -14,7 +15,7 @@ import Search from "antd/es/input/Search";
 import { uploadFile } from "../../../redux/kanban/actions";
 import { Navigate, useParams } from "react-router-dom";
 import {
-  useDeleteTaskMutation,
+  useCloseTaskMutation,
   useUploadFileMutation,
 } from "../../../redux/task/reducer";
 import { v4 } from "uuid";
@@ -25,13 +26,14 @@ import SearchMembers from "./SearchMembers";
 const MenuActions = () => {
   const { taskId, projectId } = useParams();
   const [upload, { isLoading: uploadingFile }] = useUploadFileMutation();
+  const [closeTask, { isSuccess: successCloseTask }] = useCloseTaskMutation();
   const [
     deleteTask,
     { isSuccess: successDeleteTask, isLoading: deletingTask },
-  ] = useDeleteTaskMutation();
+  ] = useCloseTaskMutation();
 
-  const itemsActions = useMemo(
-    () => [
+  const itemsActions = useMemo(() => {
+    const items = [
       {
         key: v4(),
         label: "вложения",
@@ -70,14 +72,37 @@ const MenuActions = () => {
           <Spin spinning={deletingTask}>
             <Flex justify="space-between" align="center">
               <Typography.Text>Вы уверены?</Typography.Text>
+              {successCloseTask && (
+                <Alert type="success" message="задача закрыта" />
+              )}
+              <Button onClick={() => closeTask({ taskId })}>Да</Button>
+            </Flex>
+          </Spin>
+        ),
+      },
+      {
+        key: v4(),
+        label: "удалить задачу",
+        children: (
+          <Spin spinning={deletingTask}>
+            <Flex justify="space-between" align="center">
+              <Typography.Text>Вы уверены?</Typography.Text>
               <Button onClick={() => deleteTask({ taskId })}>Да</Button>
             </Flex>
           </Spin>
         ),
       },
-    ],
-    [taskId, upload]
-  );
+    ];
+    return items;
+  }, [
+    closeTask,
+    deleteTask,
+    deletingTask,
+    successCloseTask,
+    taskId,
+    upload,
+    uploadingFile,
+  ]);
 
   if (successDeleteTask) return <Navigate to={"/dashboard/" + projectId} />;
 

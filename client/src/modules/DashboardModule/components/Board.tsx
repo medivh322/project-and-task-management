@@ -3,15 +3,21 @@ import { Link, Outlet, useParams } from "react-router-dom";
 import { useGetProjectBoardQuery } from "../../../redux/kanban/reducer";
 import AddCategory from "./popovers/AddCategory";
 import CategoryTable from "./CategoryTable";
+import { useAppSelector } from "../../../redux/store";
+import { getKanban } from "../../../redux/kanban/selectors";
+
 const Board = () => {
   const params = useParams();
-  const { data: categories, isFetching: loading } = useGetProjectBoardQuery(
+  const { boardData, curIdBoard } = useAppSelector(getKanban);
+  const { isFetching: loading } = useGetProjectBoardQuery(
     { projectId: params.projectId },
     {
-      skip: !params.projectId,
+      skip: !params.projectId || curIdBoard === params.projectId,
       refetchOnMountOrArgChange: true,
     }
   );
+
+  console.log(boardData);
 
   if (loading) return <div>загрузка...</div>;
 
@@ -24,8 +30,8 @@ const Board = () => {
       </Space>
       <Layout style={{ marginTop: "10px" }}>
         <Space size={35} align="start" style={{ marginRight: "400px" }}>
-          {!!categories?.length &&
-            categories.map((category) => (
+          {!!boardData?.length &&
+            boardData.map((category) => (
               <CategoryTable category={category} key={category._id} />
             ))}
           <AddCategory projectId={params.projectId} />
@@ -35,27 +41,5 @@ const Board = () => {
     </Layout.Content>
   );
 };
-// <Popover
-//   content={
-//     <Menu
-//       items={[
-//         {
-//           key: v4(),
-//           label: <SettingsProject paramId={params.projectId} />,
-//           title: "закрыть доску",
-//         },
-//         {
-//           key: v4(),
-//           label: <Link to={"share"}>поделиться</Link>,
-//           title: "поделиться",
-//         },
-//       ]}
-//     />
-//   }
-//   trigger={"click"}
-//   title="настройки"
-// >
-//   <Button>{item.name}</Button>
-// </Popover>
 
 export default Board;

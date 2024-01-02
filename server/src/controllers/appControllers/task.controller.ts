@@ -18,9 +18,10 @@ const taskCreate = async (req: express.Request, res: express.Response) => {
     res.status(200).json({
       success: true,
       result: {
+        _id: task._id,
         name: task.name,
-        message: 'задача была успешна создана',
-        task_id: task._id,
+        status: task.status,
+        members: [],
       },
     });
   } catch (error) {

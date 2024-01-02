@@ -25,9 +25,9 @@ const categoryCreate = async (req: express.Request, res: express.Response) => {
     res.status(200).json({
       success: true,
       result: {
+        _id: category._id,
         name: category.name,
-        message: 'категория была успешно создана',
-        project_id: category._id,
+        tasks: [],
       },
     });
   } catch (error) {

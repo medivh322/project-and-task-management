@@ -1,31 +1,121 @@
-import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import * as kanbanTypes from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
 import { commonReducerAction } from "../common/reducer";
 import { Key } from "antd/es/table/interface";
-import { Category } from "../../types/models";
+import { Category, ProjectListItem, Task } from "../../types/models";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  CLOSE_TASK,
+  DELETE_TASK,
+  KANBAN_REDUCER,
+  SET_BOARDDATA,
+  SET_NEW_CATEGORY,
+  SET_NEW_TASK,
+  SET_PROJECT_LIST,
+  SET_STATUS_LOADING_PROJECT_LIST,
+} from "./types";
+import _ from "lodash";
 
-interface IKanban {
-  userId: string | null;
+interface IKanbanState {
+  projectList: ProjectListItem[] | null;
+  boardData: Category[] | null;
+  curIdBoard: string | null;
+  loadingGetProjectList: boolean;
 }
 
-const initialState: IKanban = {
-  userId: null,
+const initialState: IKanbanState = {
+  projectList: null,
+  loadingGetProjectList: false,
+  boardData: null,
+  curIdBoard: null,
 };
 
 const kanbanSlice = createSlice({
-  name: kanbanTypes.KANBAN_REDUCER,
+  name: KANBAN_REDUCER,
   initialState,
   reducers: {
-    [kanbanTypes.SET_ID]: (
+    [SET_PROJECT_LIST]: (
       state,
       action: PayloadAction<{
-        id: string;
+        projectList: ProjectListItem[];
       }>
     ) => {
-      state.userId = action.payload.id;
+      state.projectList = action.payload.projectList;
+    },
+    [SET_STATUS_LOADING_PROJECT_LIST]: (
+      state,
+      action: PayloadAction<{
+        status: boolean;
+      }>
+    ) => {
+      state.loadingGetProjectList = action.payload.status;
+    },
+    [SET_BOARDDATA]: (
+      state,
+      action: PayloadAction<{
+        categories: Category[];
+        curIdBoard: string;
+      }>
+    ) => {
+      state.boardData = action.payload.categories;
+      state.curIdBoard = action.payload.curIdBoard;
+    },
+    [SET_NEW_CATEGORY]: (
+      state,
+      action: PayloadAction<{
+        category: Category;
+      }>
+    ) => {
+      if (state.boardData !== null) {
+        state.boardData = [...state.boardData, action.payload.category];
+      }
+    },
+    [SET_NEW_TASK]: (
+      state,
+      action: PayloadAction<{
+        task: Task;
+        categoryId: string;
+      }>
+    ) => {
+      if (action.payload.categoryId !== null && state.boardData !== null) {
+        const index = state.boardData?.findIndex(
+          (category) => category._id === action.payload.categoryId
+        );
+        state.boardData[index].tasks.push(action.payload.task);
+      }
+    },
+    [DELETE_TASK]: (
+      state,
+      action: PayloadAction<{
+        taskId: string;
+      }>
+    ) => {
+      if (action.payload.taskId !== null && state.boardData !== null) {
+        state.boardData.forEach((category, iCategory) => {
+          category.tasks.forEach((task, iTask) => {
+            if (task._id === action.payload.taskId && state.boardData) {
+              state.boardData[iCategory].tasks.splice(iTask, 1);
+            }
+          });
+        });
+      }
+    },
+    [CLOSE_TASK]: (
+      state,
+      action: PayloadAction<{
+        taskId: string;
+      }>
+    ) => {
+      if (action.payload.taskId !== null && state.boardData !== null) {
+        state.boardData.forEach((category, iCategory) => {
+          category.tasks.forEach((task, iTask) => {
+            if (task._id === action.payload.taskId && state.boardData) {
+              state.boardData[iCategory].tasks[iTask].status = "close";
+            }
+          });
+        });
+      }
     },
   },
 });
@@ -38,26 +128,8 @@ export const projectsApi = createApi({
   }),
   tagTypes: ["Projects", "Categories", "Members"],
   endpoints: (builder) => ({
-    checkAccessRole: builder.query<
-      void,
-      {
-        projectId: string | undefined;
-        userId: string | null;
-        accessRole: string;
-      }
-    >({
-      query: ({ userId, projectId, accessRole }) => ({
-        url: `role`,
-        body: {
-          userId,
-          projectId,
-          accessRole,
-        },
-        method: "POST",
-      }),
-    }),
     addTask: builder.mutation<
-      { status: string },
+      { result: Task },
       { categoryId: string | null; name: string; projectId: string | undefined }
     >({
       query({ name, categoryId, projectId }) {
@@ -71,19 +143,40 @@ export const projectsApi = createApi({
           },
         };
       },
-      invalidatesTags: ["Categories"],
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions[SET_NEW_TASK]({
+              categoryId: arg.categoryId as string,
+              task: data.result,
+            })
+          );
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
     }),
     getListProjects: builder.query<
-      { _id: string; name: string }[],
+      ProjectListItem[] | [],
       { userId: string | null }
     >({
       query: ({ userId }) => ({
         url: `projects/getlist/${userId}`,
         method: "GET",
       }),
-      transformResponse: (response: {
-        projects: { _id: string; name: string }[];
-      }) => response.projects,
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions["SET_PROJECT_LIST"]({ projectList: data })
+          );
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+      transformResponse: (response: { projects: ProjectListItem[] | [] }) =>
+        response.projects,
       providesTags: ["Projects"],
     }),
     addListProjects: builder.mutation<
@@ -137,7 +230,19 @@ export const projectsApi = createApi({
         };
       },
       transformResponse: (response: { result: Category[] }) => response.result,
-      providesTags: ["Categories"],
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions[SET_BOARDDATA]({
+              categories: data,
+              curIdBoard: arg.projectId as string,
+            })
+          );
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
     }),
     shareMembers: builder.mutation<
       void,
@@ -223,7 +328,7 @@ export const projectsApi = createApi({
       providesTags: ["Members"],
     }),
     addCategory: builder.mutation<
-      { status: string },
+      Category,
       { name: string; projectId: string | undefined }
     >({
       query({ name, projectId }) {
@@ -236,17 +341,19 @@ export const projectsApi = createApi({
           },
         };
       },
+      transformResponse: (response: { result: Category }) => response.result,
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
         try {
-          await queryFulfilled;
+          const { data } = await queryFulfilled;
+          dispatch(kanbanSlice.actions[SET_NEW_CATEGORY]({ category: data }));
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
         dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
       },
-      invalidatesTags: (result) =>
-        typeof result !== "undefined" ? ["Categories"] : [],
+      // invalidatesTags: (result) =>
+      //   typeof result !== "undefined" ? ["Categories"] : [],
     }),
     deleteCategory: builder.mutation<void, { categoryId: string | undefined }>({
       query({ categoryId }) {
@@ -281,8 +388,7 @@ export const {
   useSearchMembersMutation,
   useShareMembersMutation,
   useGetMembersProjectQuery,
-  useCheckAccessRoleQuery,
 } = projectsApi;
 export const kanbanReducerState = kanbanSlice.getInitialState;
-export const kanbanActions = kanbanSlice.actions;
+export const kanbanReducerAction = kanbanSlice.actions;
 export default kanbanSlice;

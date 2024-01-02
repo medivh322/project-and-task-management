@@ -27,6 +27,7 @@ import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useMemo } from "react";
 import { isTaskOverdue } from "../../../helper";
+// import { isTaskOverdue } from "../../../helper";
 
 dayjs.extend(utc);
 
@@ -136,11 +137,9 @@ const ModalTask = () => {
               <Col span={16}>
                 <Attachments taskId={taskId} closed={closed} />
               </Col>
-              {!closed && (
-                <Col span={8}>
-                  <MenuActions />
-                </Col>
-              )}
+              <Col span={8}>
+                <MenuActions closed={closed} />
+              </Col>
             </Row>
           </>
         ) : !isError ? (

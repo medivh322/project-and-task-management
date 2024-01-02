@@ -1,38 +1,46 @@
 import { UploadOutlined } from "@ant-design/icons";
-import {
-  Alert,
-  Button,
-  Collapse,
-  Flex,
-  List,
-  Menu,
-  Popover,
-  Spin,
-  Typography,
-  Upload,
-} from "antd";
-import Search from "antd/es/input/Search";
-import { uploadFile } from "../../../redux/kanban/actions";
-import { Navigate, useParams } from "react-router-dom";
+import { Alert, Button, Collapse, Flex, Spin, Typography, Upload } from "antd";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import {
   useCloseTaskMutation,
+  useDeleteTaskMutation,
   useUploadFileMutation,
 } from "../../../redux/task/reducer";
 import { v4 } from "uuid";
 import ChangeStatus from "./ChangeStatus";
-import { useMemo } from "react";
+import { FC, useEffect, useMemo } from "react";
 import SearchMembers from "./SearchMembers";
 
-const MenuActions = () => {
+const MenuActions: FC<{ closed: boolean }> = ({ closed }) => {
   const { taskId, projectId } = useParams();
+  const navigate = useNavigate();
+
   const [upload, { isLoading: uploadingFile }] = useUploadFileMutation();
   const [closeTask, { isSuccess: successCloseTask }] = useCloseTaskMutation();
   const [
     deleteTask,
     { isSuccess: successDeleteTask, isLoading: deletingTask },
-  ] = useCloseTaskMutation();
+  ] = useDeleteTaskMutation();
+
+  useEffect(() => {
+    if (successCloseTask) navigate(0);
+  }, [navigate, successCloseTask]);
 
   const itemsActions = useMemo(() => {
+    const closeItem = {
+      key: v4(),
+      label: "удалить задачу",
+      children: (
+        <Spin spinning={deletingTask}>
+          <Flex justify="space-between" align="center">
+            <Typography.Text>Вы уверены?</Typography.Text>
+            <Button disabled={false} onClick={() => deleteTask({ taskId })}>
+              Да
+            </Button>
+          </Flex>
+        </Spin>
+      ),
+    };
     const items = [
       {
         key: v4(),
@@ -72,33 +80,19 @@ const MenuActions = () => {
           <Spin spinning={deletingTask}>
             <Flex justify="space-between" align="center">
               <Typography.Text>Вы уверены?</Typography.Text>
-              {successCloseTask && (
-                <Alert type="success" message="задача закрыта" />
-              )}
               <Button onClick={() => closeTask({ taskId })}>Да</Button>
             </Flex>
           </Spin>
         ),
       },
-      {
-        key: v4(),
-        label: "удалить задачу",
-        children: (
-          <Spin spinning={deletingTask}>
-            <Flex justify="space-between" align="center">
-              <Typography.Text>Вы уверены?</Typography.Text>
-              <Button onClick={() => deleteTask({ taskId })}>Да</Button>
-            </Flex>
-          </Spin>
-        ),
-      },
+      closeItem,
     ];
-    return items;
+    return !closed ? items : [closeItem];
   }, [
     closeTask,
+    closed,
     deleteTask,
     deletingTask,
-    successCloseTask,
     taskId,
     upload,
     uploadingFile,

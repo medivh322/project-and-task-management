@@ -1,10 +1,10 @@
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/dist/query/react";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
-import { projectsApi } from "../kanban/reducer";
-import { commonReducerAction } from "../common/reducer";
+import kanbanSlice, { projectsApi } from "../kanban/reducer";
 import { Key } from "antd/es/table/interface";
 import { Task } from "../../types/models";
+import { CLOSE_TASK, DELETE_TASK, SET_NEW_TASK } from "../kanban/types";
 
 const taskApi = createApi({
   reducerPath: "task",
@@ -66,7 +66,11 @@ const taskApi = createApi({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
-          dispatch(projectsApi.util.invalidateTags(["Categories"]));
+          dispatch(
+            kanbanSlice.actions[CLOSE_TASK]({
+              taskId: arg.taskId as string,
+            })
+          );
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
@@ -85,7 +89,11 @@ const taskApi = createApi({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
-          dispatch(projectsApi.util.invalidateTags(["Categories"]));
+          dispatch(
+            kanbanSlice.actions[DELETE_TASK]({
+              taskId: arg.taskId as string,
+            })
+          );
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
@@ -211,7 +219,6 @@ const taskApi = createApi({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
-          dispatch(projectsApi.util.invalidateTags(["Categories"]));
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }

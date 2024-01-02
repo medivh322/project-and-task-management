@@ -56,7 +56,6 @@ const signup = async (req: express.Request, res: express.Response) => {
       .status(200)
       .cookie('token', token, {
         maxAge: 30 * 24 * 60 * 60 * 1000,
-        httpOnly: true,
       })
       .json({
         success: true,

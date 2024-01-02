@@ -1,12 +1,14 @@
 import { LogoutOutlined } from "@ant-design/icons";
 import { Header } from "antd/es/layout/layout";
-import { useLogoutMutation } from "../../redux/sign/reducer";
+import { useCookies } from "react-cookie";
 
 const HeaderApp = () => {
-  const [logout] = useLogoutMutation();
-  const handleClick = async () => {
-    await logout();
+  const [cookies, setCookies, removeCookies] = useCookies();
+
+  const handleClickLogout = () => {
+    removeCookies("token");
   };
+
   return (
     <Header style={{ display: "flex" }}>
       <LogoutOutlined
@@ -15,7 +17,7 @@ const HeaderApp = () => {
           color: "white",
           marginLeft: "auto",
         }}
-        onClick={handleClick}
+        onClick={handleClickLogout}
       />
     </Header>
   );

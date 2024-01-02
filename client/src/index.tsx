@@ -6,6 +6,7 @@ import App from "./app";
 import { store } from "./redux/store";
 import { Provider } from "react-redux";
 import "./style/app.scss";
+import { CookiesProvider } from "react-cookie";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement
@@ -13,7 +14,9 @@ const root = ReactDOM.createRoot(
 root.render(
   <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <CookiesProvider>
+        <App />
+      </CookiesProvider>
     </Provider>
   </React.StrictMode>
 );

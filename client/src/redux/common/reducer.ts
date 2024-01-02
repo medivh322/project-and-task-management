@@ -1,8 +1,17 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
-import { COMMON_REDUCER, LOADING_FULLSCREEN } from "./types";
+import { COMMON_REDUCER, LOADING_FULLSCREEN, SET_ID } from "./types";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { API_BASE_URL } from "../../config/serverApiConfig";
+import errorHandler, { ErrorRes } from "../../request/errorHundler";
 
-const initialState = {
+interface ICommonState {
+  isLoadingFullScreen: boolean;
+  userId: string | null;
+}
+
+const initialState: ICommonState = {
   isLoadingFullScreen: false,
+  userId: null,
 };
 
 const commonSlice = createSlice({
@@ -17,9 +26,60 @@ const commonSlice = createSlice({
     ) => {
       state.isLoadingFullScreen = action.payload.loading;
     },
+    [SET_ID]: (
+      state,
+      action: PayloadAction<{
+        id: string;
+      }>
+    ) => {
+      state.userId = action.payload.id;
+    },
   },
 });
 
+export const commonApi = createApi({
+  reducerPath: "common",
+  baseQuery: fetchBaseQuery({
+    baseUrl: `${API_BASE_URL}`,
+    credentials: "include",
+  }),
+  endpoints: (builder) => ({
+    checkAccessRole: builder.query<
+      void,
+      {
+        projectId: string | undefined;
+        userId: string | null;
+        accessRole: string;
+      }
+    >({
+      query: ({ userId, projectId, accessRole }) => ({
+        url: `role`,
+        body: {
+          userId,
+          projectId,
+          accessRole,
+        },
+        method: "POST",
+      }),
+    }),
+    checkToken: builder.query<{ id: string }, null>({
+      query: () => ({
+        url: "auth",
+        method: "GET",
+      }),
+      async onQueryStarted(arg, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(commonSlice.actions[SET_ID]({ id: data.id }));
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+    }),
+  }),
+});
+
+export const { useCheckAccessRoleQuery, useCheckTokenQuery } = commonApi;
 export const commonReducerState = commonSlice.getInitialState;
 export const commonReducerAction = commonSlice.actions;
 export default commonSlice;

@@ -1,2 +1,3 @@
 export const COMMON_REDUCER = "COMMON_REDUCER";
 export const LOADING_FULLSCREEN = "LOADING_FULLSCREEN";
+export const SET_ID = "SET_ID";

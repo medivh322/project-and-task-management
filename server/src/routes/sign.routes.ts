@@ -40,12 +40,6 @@ router.get('/auth', (req: express.Request, res: express.Response) => {
     });
   }
 });
-router.get('/logout', (req: express.Request, res: express.Response) => {
-  res.clearCookie('token');
-  res.status(200).json({
-    success: false,
-  });
-});
 
 router.post('/login', catchErrors(authJwtController.login));
 router.post('/registration', catchErrors(signupController.signup));

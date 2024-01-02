@@ -1,17 +1,18 @@
-import { Flex, Menu, Skeleton } from "antd";
+import { Flex, Menu, Skeleton, Typography } from "antd";
 import { useAppSelector } from "../../../redux/store";
-import { selectKanban } from "../../../redux/kanban/selectors";
+
 import { ItemType } from "antd/es/menu/hooks/useItems";
 import { FC } from "react";
-import { useNavigate } from "react-router-dom";
-import { EllipsisOutlined, LogoutOutlined } from "@ant-design/icons";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { EllipsisOutlined } from "@ant-design/icons";
 import { useGetListProjectsQuery } from "../../../redux/kanban/reducer";
 import AddProjects from "./popovers/AddProject";
-import { useLogoutMutation } from "../../../redux/sign/reducer";
+import { selectCommon } from "../../../redux/common/selectors";
+import Logout from "./Logout";
+import { getKanban } from "../../../redux/kanban/selectors";
 
 const SidebarMenu: FC = () => {
-  const { userId } = useAppSelector(selectKanban);
-  const [logout] = useLogoutMutation();
+  const { userId } = useAppSelector(selectCommon);
 
   const navigate = useNavigate();
 
@@ -31,10 +32,6 @@ const SidebarMenu: FC = () => {
     navigate(`/dashboard/${e.key}`);
   };
 
-  const handleClick = async () => {
-    await logout();
-  };
-
   if (isError) return <div>ошибка загрузки данных...</div>;
 
   if (isFetching && !currentData)
@@ -42,6 +39,9 @@ const SidebarMenu: FC = () => {
 
   return (
     <Flex vertical style={{ height: "100%", padding: "0 0 10px 0" }}>
+      <Typography.Text style={{ color: "white" }}>
+        Список проектов:
+      </Typography.Text>
       {projectsList.length ? (
         <Menu
           onClick={handleClickMenuProjects}
@@ -60,14 +60,7 @@ const SidebarMenu: FC = () => {
         <div>список проектов пуст</div>
       )}
       <AddProjects userId={userId} />
-      <LogoutOutlined
-        style={{
-          fontSize: "40px",
-          color: "white",
-          margin: "auto auto 0 auto",
-        }}
-        onClick={handleClick}
-      />
+      <Logout />
     </Flex>
   );
 };

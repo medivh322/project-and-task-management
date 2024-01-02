@@ -10,57 +10,98 @@ import Dashboard from "./pages/Dashboard";
 import Board from "./modules/DashboardModule/components/Board";
 import LoginPage from "./pages/Login";
 import RegisterPage from "./pages/Register";
-import { Layout, Spin } from "antd";
+import { Layout, Spin, notification } from "antd";
 import ModalTask from "./modules/DashboardModule/components/ModalTask";
 import SidebarMenu from "./modules/DashboardModule/components/SidebarMenu";
-import { useCheckAuthUserQuery } from "./redux/sign/reducer";
 import { useAppSelector } from "./redux/store";
 import { selectCommon } from "./redux/common/selectors";
 import SettingsProject from "./modules/DashboardModule/components/SettingsProject";
 import { Content } from "antd/es/layout/layout";
+import { Cookies, useCookies, withCookies } from "react-cookie";
+import { FC, useEffect, useMemo } from "react";
+import { useCheckTokenQuery } from "./redux/common/reducer";
+import { isUndefined } from "lodash";
+import { getKanban } from "./redux/kanban/selectors";
+import { useGetListProjectsQuery } from "./redux/kanban/reducer";
 
-const loggenInRouter = createBrowserRouter(
-  createRoutesFromElements(
-    <Route element={<Root />}>
-      <Route path="/" element={<Home />} />
-      <Route path="dashboard" element={<Dashboard />} />
-      <Route path="dashboard/:projectId" element={<Board />}>
-        <Route path="m/:taskId" element={<ModalTask />} />
-        <Route path="s" element={<SettingsProject />} />
-      </Route>
-      <Route path="*" element={<Navigate to={"/"} />} />
+const loggenInRouter = (
+  <Route element={<Root />}>
+    <Route path="/" element={<Home />} />
+    <Route path="dashboard" element={<Dashboard />} />
+    <Route path="dashboard/:projectId" element={<Board />}>
+      <Route path="m/:taskId" element={<ModalTask />} />
+      <Route path="s" element={<SettingsProject />} />
     </Route>
-  )
+    <Route path="*" element={<Navigate to={"/"} />} />
+  </Route>
 );
 
-const noLoggenInRouter = createBrowserRouter(
-  createRoutesFromElements(
-    <>
-      <Route path="login" element={<LoginPage />} />
-      <Route path="register" element={<RegisterPage />} />
-      <Route path="*" element={<Navigate to={"login"} />} />
-    </>
-  )
+const noLoggenInRouter = (
+  <>
+    <Route path="login" element={<LoginPage />} />
+    <Route path="register" element={<RegisterPage />} />
+    <Route path="*" element={<Navigate to={"login"} />} />
+  </>
 );
 
-const App = () => {
-  const api = useCheckAuthUserQuery();
+const App: FC<{ cookies: Cookies }> = ({ cookies }) => {
   const { isLoadingFullScreen } = useAppSelector(selectCommon);
+  const [api, contextHolder] = notification.useNotification();
 
-  if (api.isFetching) return <Spin spinning={api.isFetching} fullscreen />;
+  const [token] = useCookies(["token"]);
+
+  const { isFetching: fetchingCheckToken, isError } = useCheckTokenQuery(null, {
+    skip: isUndefined(token.token),
+  });
+
+  useEffect(() => {
+    if (isError) {
+      api.error({
+        message: "Notification Title",
+        description:
+          "This is the content of the notification. This is the content of the notification. This is the content of the notification.",
+      });
+    }
+  }, [api, isError]);
+
+  const router = useMemo(
+    () =>
+      createBrowserRouter(
+        createRoutesFromElements(
+          !isError && !isUndefined(token.token)
+            ? loggenInRouter
+            : noLoggenInRouter
+        )
+      ),
+    [isError, token.token]
+  );
+
+  if (fetchingCheckToken || isLoadingFullScreen)
+    return <Spin spinning fullscreen />;
 
   return (
     <>
-      <RouterProvider
-        router={api.isSuccess ? loggenInRouter : noLoggenInRouter}
-      />
-      <Spin spinning={isLoadingFullScreen} fullscreen />
+      <RouterProvider router={router} />
+      {contextHolder}
     </>
   );
 };
 
 function Home() {
-  return <div>вы на главной</div>;
+  const { userId } = useAppSelector(selectCommon);
+
+  const { data: projectList = [], isFetching } = useGetListProjectsQuery(
+    { userId },
+    {
+      skip: !userId,
+    }
+  );
+
+  if (isFetching) return <Spin spinning />;
+
+  if (!projectList.length) return <div>у вас нет проектов</div>;
+
+  return <Navigate to={"/dashboard/" + projectList[0]._id} />;
 }
 
 function Root() {
@@ -76,4 +117,4 @@ function Root() {
   );
 }
 
-export default App;
+export default withCookies(App);

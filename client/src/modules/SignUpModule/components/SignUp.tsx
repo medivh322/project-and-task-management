@@ -1,7 +1,7 @@
 import { Button, Flex, Form, Input, Typography } from "antd";
 import { FC } from "react";
 import { Link } from "react-router-dom";
-import { useSignActionMutation } from "../../../redux/sign/reducer";
+import { useSignMutation } from "../../../redux/sign/reducer";
 import { SIGNUP } from "../../../redux/sign/types";
 
 interface ILogin {
@@ -10,7 +10,7 @@ interface ILogin {
 }
 
 const SignUpForm: FC = () => {
-  const [signup, { isLoading, isSuccess }] = useSignActionMutation();
+  const [signup, { isLoading, isSuccess }] = useSignMutation();
 
   const onFinish = async (values: ILogin) =>
     await signup({ data: values, url: SIGNUP });

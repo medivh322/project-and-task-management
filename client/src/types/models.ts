@@ -17,3 +17,8 @@ export interface Category {
   name: string;
   tasks: Task[];
 }
+
+export interface ProjectListItem {
+  _id: string;
+  name: string;
+}

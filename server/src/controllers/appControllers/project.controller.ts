@@ -58,7 +58,7 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         $match: { project_id: new mongoose.Types.ObjectId(id) },
       },
       {
-        $sort: { createdAt: 1 }, // или -1 для сортировки от новых к старым
+        $sort: { createdAt: 1 },
       },
       {
         $lookup: {
@@ -80,19 +80,20 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         },
       },
       {
-        $group: {
-          _id: '$_id',
-          name: { $first: '$name' },
+        $project: {
+          _id: 1,
+          name: 1,
+          createdAt: 1, // Сохраняем значение createdAt
           tasks: {
-            $push: {
-              $cond: {
-                if: { $eq: ['$tasks', {}] },
-                then: '$$REMOVE',
-                else: {
-                  _id: '$tasks._id',
-                  name: '$tasks.name',
-                  status: '$tasks.status',
-                  members: { $map: { input: '$taskMembers', as: 'member', in: '$$member.login' } },
+            $cond: {
+              if: { $eq: ['$tasks', {}] },
+              then: '$$REMOVE',
+              else: {
+                _id: '$tasks._id',
+                name: '$tasks.name',
+                status: '$tasks.status',
+                members: {
+                  $ifNull: [{ $map: { input: '$taskMembers', as: 'member', in: '$$member.login' } }, []],
                 },
               },
             },
@@ -100,13 +101,25 @@ const getCurrentProjectInfo = async (req: express.Request, res: express.Response
         },
       },
       {
+        $group: {
+          _id: '$_id',
+          name: { $first: '$name' },
+          createdAt: { $first: '$createdAt' }, // Группировка с сохранением createdAt
+          tasks: { $push: '$tasks' },
+        },
+      },
+      {
+        $sort: { createdAt: 1 }, // Сортировка по createdAt после группировки
+      },
+      {
         $project: {
+          _id: 1,
           name: 1,
           tasks: {
             $filter: {
               input: '$tasks',
               as: 'task',
-              cond: { $gt: ['$$task._id', null] }, // Фильтруем задачи, убедившись, что у них есть _id
+              cond: { $gt: ['$$task._id', null] },
             },
           },
         },

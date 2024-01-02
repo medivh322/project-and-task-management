@@ -1,14 +1,14 @@
 import { FC } from "react";
-import { useCheckAccessRoleQuery } from "../redux/kanban/reducer";
-import { selectKanban } from "../redux/kanban/selectors";
 import { useAppSelector } from "../redux/store";
 import { useParams } from "react-router-dom";
+import { useCheckAccessRoleQuery } from "../redux/common/reducer";
+import { selectCommon } from "../redux/common/selectors";
 
 const CheckRolesWrapper: FC<{ children?: JSX.Element; accessRole: string }> = ({
   children,
   accessRole,
 }) => {
-  const { userId } = useAppSelector(selectKanban);
+  const { userId } = useAppSelector(selectCommon);
   const { projectId } = useParams();
   const { isError } = useCheckAccessRoleQuery(
     { userId, projectId, accessRole },

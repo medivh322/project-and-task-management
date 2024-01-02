@@ -4,8 +4,10 @@ import {
   useChangeStatusMutation,
   useGetStatusesQuery,
 } from "../../../redux/task/reducer";
+import { useState } from "react";
 
 const ChangeStatus = () => {
+  const [selectedStatus, setSelectedStatus] = useState<React.Key[]>();
   const { projectId, taskId } = useParams();
   const { data, isFetching: gettingStatuses } = useGetStatusesQuery(
     { projectId, taskId },
@@ -16,12 +18,16 @@ const ChangeStatus = () => {
     <Spin spinning={changing || gettingStatuses}>
       <Table
         rowSelection={{
-          selectedRowKeys: data?.statuses
-            .filter((item) => item.selected)
-            .map((item) => item.key),
+          selectedRowKeys:
+            selectedStatus ||
+            data?.statuses
+              .filter((item) => item.selected)
+              .map((item) => item.key),
           type: "radio",
-          onChange: (selectedRowKeys) =>
-            change({ categoryId: selectedRowKeys[0], taskId }),
+          onChange: (selectedRowKeys) => {
+            setSelectedStatus(selectedRowKeys);
+            change({ categoryId: selectedRowKeys[0], taskId });
+          },
         }}
         showHeader={false}
         dataSource={data?.statuses}

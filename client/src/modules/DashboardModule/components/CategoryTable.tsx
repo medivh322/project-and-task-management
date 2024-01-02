@@ -1,10 +1,9 @@
-import { Avatar, Card, Col, Flex, List, Row, Typography } from "antd";
+import { Card, Col, Flex, List, Row, Typography } from "antd";
 import { Link } from "react-router-dom";
 import AddTask from "./popovers/AddTask";
 import SettingsCategory from "./popovers/SettingsCategory";
 import { FC } from "react";
 import { Category } from "../../../types/models";
-import { UserOutlined } from "@ant-design/icons";
 
 const CategoryTable: FC<{ category: Category }> = ({ category }) => {
   return (
@@ -15,6 +14,7 @@ const CategoryTable: FC<{ category: Category }> = ({ category }) => {
           <SettingsCategory categoryId={category._id} />
         </Flex>
       }
+      bodyStyle={{ padding: "0 10px 10px 10px" }}
       style={{ width: 350 }}
     >
       {!!category.tasks.length && (
@@ -23,7 +23,10 @@ const CategoryTable: FC<{ category: Category }> = ({ category }) => {
           dataSource={category.tasks}
           renderItem={(item) => (
             <Link key={item._id} to={"m/" + item._id}>
-              <Card bodyStyle={{ padding: "10px 15px" }}>
+              <Card
+                bodyStyle={{ padding: "10px 15px" }}
+                style={{ marginTop: "10px" }}
+              >
                 <List.Item
                   key={item._id}
                   style={{ display: "block", padding: 0 }}
@@ -31,7 +34,6 @@ const CategoryTable: FC<{ category: Category }> = ({ category }) => {
                   <Row>
                     <Col span={24}>
                       <List.Item.Meta
-                        avatar={<Avatar icon={<UserOutlined />} />}
                         title={item.name}
                         description={
                           item.members.length

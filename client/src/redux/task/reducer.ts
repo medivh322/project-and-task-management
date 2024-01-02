@@ -1,10 +1,10 @@
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/dist/query/react";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
-import kanbanSlice, { projectsApi } from "../kanban/reducer";
+import kanbanSlice from "../kanban/reducer";
 import { Key } from "antd/es/table/interface";
-import { Task } from "../../types/models";
-import { CLOSE_TASK, DELETE_TASK, SET_NEW_TASK } from "../kanban/types";
+import { Attachment, Task } from "../../types/models";
+import { CHANGE_STATUS_TASK, CLOSE_TASK, DELETE_TASK } from "../kanban/types";
 
 const taskApi = createApi({
   reducerPath: "task",
@@ -99,47 +99,32 @@ const taskApi = createApi({
         }
       },
     }),
-    getAttachments: builder.query<
+    getAttachments: builder.query<Attachment[], { taskId: string | undefined }>(
       {
-        _id: string;
-        name: string;
-        date_upload: string;
-        url: string;
-        file_id: string;
-      }[],
-      { taskId: string | undefined }
-    >({
-      query: ({ taskId }) => ({
-        url: "tasks/attachments/" + taskId,
-        method: "GET",
-      }),
-      transformResponse: (response: {
-        attachments: {
-          _id: string;
-          name: string;
-          date_upload: string;
-          url: string;
-          file_id: string;
-        }[];
-      }) => {
-        return response.attachments.map((attachment) => {
-          const originalDate = new Date(attachment.date_upload);
-          return {
-            ...attachment,
-            date_upload: `${originalDate.getFullYear()}-${(
-              originalDate.getMonth() + 1
-            )
-              .toString()
-              .padStart(2, "0")}-${originalDate
-              .getDate()
-              .toString()
-              .padStart(2, "0")}`,
-          };
-        });
-      },
-      keepUnusedDataFor: 0,
-      providesTags: ["Attachments"],
-    }),
+        query: ({ taskId }) => ({
+          url: "tasks/attachments/" + taskId,
+          method: "GET",
+        }),
+        transformResponse: (response: { attachments: Attachment[] }) => {
+          return response.attachments.map((attachment) => {
+            const originalDate = new Date(attachment.uploadDate);
+            return {
+              ...attachment,
+              uploadDate: `${originalDate.getFullYear()}-${(
+                originalDate.getMonth() + 1
+              )
+                .toString()
+                .padStart(2, "0")}-${originalDate
+                .getDate()
+                .toString()
+                .padStart(2, "0")}`,
+            };
+          });
+        },
+        keepUnusedDataFor: 0,
+        providesTags: ["Attachments"],
+      }
+    ),
     getStatuses: builder.query<
       { statuses: { key: string; name: string; selected: boolean }[] },
       { projectId: string | undefined; taskId: string | undefined }
@@ -219,29 +204,16 @@ const taskApi = createApi({
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
         try {
           await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions[CHANGE_STATUS_TASK]({
+              taskId: arg.taskId as string,
+              categoryId: arg.categoryId as string,
+            })
+          );
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
       },
-    }),
-    uploadFile: builder.mutation<
-      void,
-      {
-        taskId: string | undefined;
-        file: File;
-      }
-    >({
-      query: ({ taskId, file }) => {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("Content-Type", file.type);
-        return {
-          url: "upload/" + taskId,
-          method: "POST",
-          body: formData,
-        };
-      },
-      invalidatesTags: ["Attachments"],
     }),
     deleteFile: builder.mutation<
       void,
@@ -264,7 +236,6 @@ export const {
   useGetTaskInfoQuery,
   useSaveTaskInfoMutation,
   useGetAttachmentsQuery,
-  useUploadFileMutation,
   useDeleteFileMutation,
   useCloseTaskMutation,
   useDeleteTaskMutation,

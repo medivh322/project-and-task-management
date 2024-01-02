@@ -3,13 +3,12 @@ import { useAppSelector } from "../../../redux/store";
 
 import { ItemType } from "antd/es/menu/hooks/useItems";
 import { FC } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
-import { EllipsisOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { useGetListProjectsQuery } from "../../../redux/kanban/reducer";
 import AddProjects from "./popovers/AddProject";
 import { selectCommon } from "../../../redux/common/selectors";
 import Logout from "./Logout";
-import { getKanban } from "../../../redux/kanban/selectors";
+import { AppstoreOutlined } from "@ant-design/icons";
 
 const SidebarMenu: FC = () => {
   const { userId } = useAppSelector(selectCommon);
@@ -46,13 +45,14 @@ const SidebarMenu: FC = () => {
         <Menu
           onClick={handleClickMenuProjects}
           mode="inline"
-          overflowedIndicator={<EllipsisOutlined />}
+          style={{ height: "100%", borderRight: 0 }}
           items={projectsList.map(
             (project: any): ItemType => ({
               key: project._id,
               title: project.name,
               label: project.name,
               disabled: isFetching,
+              icon: <AppstoreOutlined />,
             })
           )}
         />

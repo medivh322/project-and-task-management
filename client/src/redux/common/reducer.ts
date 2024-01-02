@@ -48,14 +48,12 @@ export const commonApi = createApi({
       void,
       {
         projectId: string | undefined;
-        userId: string | null;
         accessRole: string;
       }
     >({
-      query: ({ userId, projectId, accessRole }) => ({
+      query: ({ projectId, accessRole }) => ({
         url: `role`,
         body: {
-          userId,
           projectId,
           accessRole,
         },

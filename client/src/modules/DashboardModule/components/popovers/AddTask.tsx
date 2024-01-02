@@ -33,7 +33,9 @@ const AddTask = ({ categoryId }: any) => {
       }
       trigger="click"
     >
-      <Button block>Добавить задачу</Button>
+      <Button block style={{ marginTop: "10px" }}>
+        Добавить задачу
+      </Button>
     </Popover>
   );
 };

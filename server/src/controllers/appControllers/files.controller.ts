@@ -1,35 +1,26 @@
 import { GridFSBucket } from 'src';
 import mongoose from 'mongoose';
 import { Task } from '@modelstask.model';
+import mime from 'mime-types';
 
 const uploadFilesTask = async (req: any, res: any) => {
   try {
-    const { id } = req.params;
+    // const { id } = req.params;
 
-    const file = req.file?.buffer;
-    const name = req.file?.originalname;
+    // const file = req.file?.buffer;
+    // const name = req.file?.originalname;
+    // const mimetype = req.file?.mimetype;
 
-    let writestream = GridFSBucket.openUploadStream(name);
-    writestream.end(file);
+    // let writestream = GridFSBucket.openUploadStream(name);
+    // writestream.end(file);
 
-    writestream.on('error', () => {
-      res.status(500).json({ success: false, message: 'не удалось загрузить файл' });
-    });
-    writestream.on('finish', async () => {
-      const file = await Task.updateOne(
-        { _id: id },
-        {
-          $push: {
-            attachments: {
-              url: req.protocol + '://' + req.get('host') + '/api/download/file/' + writestream.id,
-              name: name,
-              file_id: new mongoose.mongo.ObjectId(writestream.id),
-            },
-          },
-        },
-      );
-      res.status(200).json({ success: true, message: 'файл успшено загружен', file });
-    });
+    // writestream.on('error', () => {
+    //   res.status(500).json({ success: false, message: 'не удалось загрузить файл' });
+    // });
+    // writestream.on('finish', async () => {
+    //   res.status(200).json({ success: true, message: 'файл успшено загружен' });
+    // });
+    res.status(200).json({ success: true, message: 'файл успешно загружен' });
   } catch (error: any) {
     res.status(500).json({ success: false, message: 'ошибка' });
   }
@@ -38,16 +29,33 @@ const uploadFilesTask = async (req: any, res: any) => {
 const downloadFiles = async (req: any, res: any) => {
   try {
     const { id } = req.params;
-    const downloadStream = GridFSBucket.openDownloadStream(new mongoose.mongo.ObjectId(id));
+    const objectId = new mongoose.mongo.ObjectId(id);
+
+    const files = await GridFSBucket.find({ _id: objectId }).toArray();
+    if (files.length === 0) {
+      return res.status(404).json({ error: 'Файл не найден' });
+    }
+
+    const file = files[0];
+    const filename = file.filename;
+    const contentType = mime.lookup(filename) || 'application/octet-stream';
+
+    res.set('Content-Type', contentType);
+
+    const downloadStream = GridFSBucket.openDownloadStream(objectId);
     downloadStream.pipe(res);
+
     downloadStream.on('end', () => {
       res.end();
     });
+
     downloadStream.on('error', (error) => {
-      res.status(500).json({ error: 'не удалось получить файл' });
+      console.error(error);
+      res.status(500).json({ error: 'Не удалось получить файл' });
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: 'ошибка' });
+    console.error(error); // Логирование для отладки
+    res.status(500).json({ success: false, message: 'Ошибка' });
   }
 };
 

@@ -1,27 +1,40 @@
-import { Modal, Tabs } from "antd";
+import { Modal, Spin, Tabs } from "antd";
 import { useMemo } from "react";
 import { v4 } from "uuid";
 import ModalShare from "./Share";
 import CloseProject from "./CloseProject";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+import { useCheckAccessRoleQuery } from "../../../redux/common/reducer";
 
 const SettingsProject = () => {
   const navigate = useNavigate();
-  const tabsItems = useMemo(
-    () => [
-      {
-        label: "Закрыть проект",
-        key: v4(),
-        children: <CloseProject />,
-      },
-      {
-        label: "Поделиться",
-        key: v4(),
-        children: <ModalShare />,
-      },
-    ],
-    []
+  const { projectId } = useParams();
+
+  const { isError, isFetching } = useCheckAccessRoleQuery(
+    { projectId, accessRole: "Admin" },
+    {
+      skip: !projectId,
+    }
   );
+
+  const tabsItems = useMemo(() => {
+    if (!isFetching) {
+      const items = [
+        {
+          label: "Поделиться",
+          key: v4(),
+          children: <ModalShare />,
+        },
+      ];
+      if (!isError)
+        items.push({
+          label: "Закрыть проект",
+          key: v4(),
+          children: <CloseProject />,
+        });
+      return items;
+    }
+  }, [isError, isFetching]);
   return (
     <Modal
       open
@@ -30,7 +43,9 @@ const SettingsProject = () => {
       footer={null}
       onCancel={() => navigate(-1)}
     >
-      <Tabs defaultActiveKey="1" tabPosition={"left"} items={tabsItems} />
+      <Spin spinning={isFetching}>
+        <Tabs defaultActiveKey="1" tabPosition={"left"} items={tabsItems} />
+      </Spin>
     </Modal>
   );
 };

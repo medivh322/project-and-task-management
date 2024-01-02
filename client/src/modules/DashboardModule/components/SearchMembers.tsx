@@ -1,5 +1,4 @@
-import { List, Button, Input, Table, notification, Typography } from "antd";
-import { useSearchMembersMutation } from "../../../redux/kanban/reducer";
+import { Button, Input, Table, Typography } from "antd";
 import {
   useGetMembersTaskQuery,
   useSearchMembersTaskMutation,
@@ -15,14 +14,16 @@ const SearchMembers = () => {
     useSearchMembersTaskMutation();
   const [set, { isSuccess: successSetMember, isLoading: settingMember }] =
     useSetMemberTaskMutation();
-  const { data: membersTask, isLoading: fetchMember } = useGetMembersTaskQuery(
+  const { data: membersTask, isFetching: fetchMember } = useGetMembersTaskQuery(
     { taskId },
     { skip: !taskId }
   );
   const [membersIds, setMembersIds] = useState<Key[]>([]);
 
   useEffect(() => {
-    reset();
+    if (successSetMember) {
+      reset();
+    }
   }, [reset, successSetMember]);
 
   return (

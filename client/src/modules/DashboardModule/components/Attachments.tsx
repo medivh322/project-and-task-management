@@ -3,6 +3,7 @@ import {
   useDeleteFileMutation,
   useGetAttachmentsQuery,
 } from "../../../redux/task/reducer";
+import { FileOutlined } from "@ant-design/icons";
 
 const Attachments = ({
   taskId,
@@ -31,12 +32,32 @@ const Attachments = ({
         renderItem={(image) => (
           <List.Item key={image._id}>
             <Space direction="horizontal" style={{ alignItems: "start" }}>
-              <Image src={image.url} width={100} height={80} />
+              {image.contentType === "image/png" ? (
+                <Image
+                  src={image.metadata.url + image._id}
+                  width={100}
+                  height={80}
+                />
+              ) : (
+                <Button
+                  style={{
+                    width: 100,
+                    height: 80,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                  rel="noopener noreferrer"
+                  icon={<FileOutlined style={{ fontSize: 30 }} />}
+                  href={image.metadata.url + image._id}
+                  target="_blank"
+                />
+              )}
               <div>
                 <Flex vertical>
-                  <Typography.Text>{image.name}</Typography.Text>
+                  <Typography.Text>{image.filename}</Typography.Text>
                   <Typography.Text>
-                    дата загрузки: {image.date_upload}
+                    дата загрузки: {image.uploadDate}
                   </Typography.Text>
                 </Flex>
                 {!closed && (

@@ -17,12 +17,10 @@ const Board = () => {
     }
   );
 
-  console.log(boardData);
-
   if (loading) return <div>загрузка...</div>;
 
   return (
-    <Layout.Content style={{ overflowX: "auto" }}>
+    <Layout.Content style={{ overflow: "scroll", height: "100%" }}>
       <Space>
         <Button>
           <Link to={"s"}>Настройки</Link>

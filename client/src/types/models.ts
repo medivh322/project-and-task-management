@@ -22,3 +22,22 @@ export interface ProjectListItem {
   _id: string;
   name: string;
 }
+
+export interface TableData {
+  key: string;
+  taskName: string;
+  members: string[];
+  status: string;
+  [categoryName: string]: string | string[];
+}
+
+export interface Attachment {
+  _id: string;
+  filename: string;
+  uploadDate: string;
+  file_id: string;
+  contentType: string;
+  metadata: {
+    url: string;
+  };
+}

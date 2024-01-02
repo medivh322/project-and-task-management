@@ -3,16 +3,13 @@ import {
   Button,
   Col,
   DatePicker,
-  Flex,
   Form,
   Input,
   Modal,
   Row,
   Skeleton,
   Space,
-  Typography,
 } from "antd";
-import type { DatePickerProps, RangePickerProps } from "antd/es/date-picker";
 import { useNavigate, useParams } from "react-router-dom";
 import TextArea from "antd/es/input/TextArea";
 import MenuActions from "./MenuActions";
@@ -20,14 +17,13 @@ import {
   useGetTaskInfoQuery,
   useSaveTaskInfoMutation,
 } from "../../../redux/task/reducer";
-import _, { isDate } from "lodash";
+import _ from "lodash";
 import Attachments from "./Attachments";
 import { Task } from "../../../types/models";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import { useMemo } from "react";
 import { isTaskOverdue } from "../../../helper";
-// import { isTaskOverdue } from "../../../helper";
 
 dayjs.extend(utc);
 
@@ -53,7 +49,7 @@ const ModalTask = () => {
     const pickParameters = ["description", "name", "date_end"];
     const body = form.getFieldsValue(pickParameters);
     body.date_end = dayjs(body.date_end[1]).isValid()
-      ? dayjs(body.date_end[1]).utc().format()
+      ? dayjs(body.date_end[1])
       : "";
     if (
       !_.isEqual(
@@ -61,7 +57,7 @@ const ModalTask = () => {
           {
             description: data?.description,
             name: data?.name,
-            date_end: data?.date_end,
+            date_end: dayjs(data?.date_end),
           },
           pickParameters
         ),

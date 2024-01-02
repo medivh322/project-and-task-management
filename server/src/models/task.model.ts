@@ -1,6 +1,7 @@
 import mongoose, { InferSchemaType } from 'mongoose';
 import express from 'express';
 import { GridFSBucket } from 'src';
+import { File } from '@modelsfile.model';
 
 const TaskSchema = new mongoose.Schema({
   name: String,
@@ -19,24 +20,17 @@ const TaskSchema = new mongoose.Schema({
       user_id: mongoose.Types.ObjectId,
     },
   ],
-  attachments: [
-    {
-      url: String,
-      name: String,
-      date_upload: { type: Date, default: Date.now },
-      file_id: mongoose.Types.ObjectId,
-    },
-  ],
 });
 
 export type TaskType = InferSchemaType<typeof TaskSchema>;
 
 TaskSchema.pre('findOneAndDelete', async function () {
-  const { attachments } = await this.model.findOne(this.getQuery()).select('attachments');
+  const { _id } = this.getQuery();
+  const attachments = await File.find({ 'metadata.taskId': _id }, '_id');
 
   if (attachments.length) {
     for (const file of attachments) {
-      await GridFSBucket.delete(new mongoose.mongo.ObjectId(file.file_id));
+      await GridFSBucket.delete(new mongoose.mongo.ObjectId(file._id));
     }
   }
 });

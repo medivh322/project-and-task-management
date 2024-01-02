@@ -6,6 +6,8 @@ import { Key } from "antd/es/table/interface";
 import { Category, ProjectListItem, Task } from "../../types/models";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import {
+  CHANGE_STATUS_TASK,
+  CHANGE_STATUS_UPLOAD_FILE,
   CLOSE_TASK,
   DELETE_TASK,
   KANBAN_REDUCER,
@@ -15,13 +17,13 @@ import {
   SET_PROJECT_LIST,
   SET_STATUS_LOADING_PROJECT_LIST,
 } from "./types";
-import _ from "lodash";
 
 interface IKanbanState {
   projectList: ProjectListItem[] | null;
   boardData: Category[] | null;
   curIdBoard: string | null;
   loadingGetProjectList: boolean;
+  uploadingFile: boolean;
 }
 
 const initialState: IKanbanState = {
@@ -29,6 +31,7 @@ const initialState: IKanbanState = {
   loadingGetProjectList: false,
   boardData: null,
   curIdBoard: null,
+  uploadingFile: false,
 };
 
 const kanbanSlice = createSlice({
@@ -116,6 +119,39 @@ const kanbanSlice = createSlice({
           });
         });
       }
+    },
+    [CHANGE_STATUS_TASK]: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        taskId: string;
+      }>
+    ) => {
+      if (action.payload.taskId !== null && state.boardData !== null) {
+        let copy: Task | null = null;
+        state.boardData.forEach((category, iCategory) => {
+          category.tasks.forEach((task, iTask) => {
+            if (task._id === action.payload.taskId && state.boardData) {
+              copy = state.boardData[iCategory].tasks[iTask];
+              state.boardData[iCategory].tasks.splice(iTask, 1);
+            }
+          });
+        });
+        if (copy) {
+          state.boardData.forEach((category, iCategory) => {
+            if (category._id === action.payload.categoryId && state.boardData)
+              state.boardData[iCategory].tasks.push(copy as Task);
+          });
+        }
+      }
+    },
+    [CHANGE_STATUS_UPLOAD_FILE]: (
+      state,
+      action: PayloadAction<{
+        status: boolean;
+      }>
+    ) => {
+      state.uploadingFile = action.payload.status;
     },
   },
 });
@@ -343,17 +379,13 @@ export const projectsApi = createApi({
       },
       transformResponse: (response: { result: Category }) => response.result,
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
         try {
           const { data } = await queryFulfilled;
           dispatch(kanbanSlice.actions[SET_NEW_CATEGORY]({ category: data }));
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
       },
-      // invalidatesTags: (result) =>
-      //   typeof result !== "undefined" ? ["Categories"] : [],
     }),
     deleteCategory: builder.mutation<void, { categoryId: string | undefined }>({
       query({ categoryId }) {

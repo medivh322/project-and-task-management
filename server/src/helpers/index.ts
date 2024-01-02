@@ -1,18 +1,27 @@
 import { User } from '@modelsuser.model';
 import express from 'express';
 import mongoose from 'mongoose';
+import jwt from 'jsonwebtoken';
 
 function env(name: string): string {
   return process.env[name] || `в .env нет ${name} значения`;
 }
 
-type Roles = 'Admin' | 'User' | 'Aboba';
+type Roles = 'Admin' | 'User';
+
+interface IUser {
+  id: string;
+}
 
 const checkAccess = (accessRole?: Roles) => {
   return async function (req: express.Request, res: express.Response, next: express.NextFunction) {
     try {
       const role = accessRole || req.body.accessRole;
-      const { userId, projectId } = req.body;
+      const { projectId } = req.body;
+      const token = req.cookies.token;
+
+      const { id: userId } = <IUser>jwt.verify(token, env('JWT_SECRET'));
+
       const access = await User.aggregate([
         {
           $match: { _id: new mongoose.Types.ObjectId(userId) },
@@ -70,6 +79,7 @@ const checkAccess = (accessRole?: Roles) => {
       if (!access[0].isAccess) {
         return res.status(403).json({
           success: false,
+          message: 'доступ запрещен',
         });
       }
       next();

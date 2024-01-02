@@ -15,12 +15,13 @@ const CloseProject: FC = () => {
   return (
     <Spin spinning={isLoading}>
       <Typography.Text>
-        закрытие проекта приведет к его удалению и перманентной потере
+        Закрыть проект? Это приведет к его удалению
       </Typography.Text>
       <Button
         onClick={async () => {
           await deleteProject({ projectId, userId });
         }}
+        style={{ marginLeft: "10px" }}
       >
         Закрыть проект
       </Button>

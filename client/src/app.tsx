@@ -21,7 +21,6 @@ import { Cookies, useCookies, withCookies } from "react-cookie";
 import { FC, useEffect, useMemo } from "react";
 import { useCheckTokenQuery } from "./redux/common/reducer";
 import { isUndefined } from "lodash";
-import { getKanban } from "./redux/kanban/selectors";
 import { useGetListProjectsQuery } from "./redux/kanban/reducer";
 
 const loggenInRouter = (

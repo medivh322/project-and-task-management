@@ -1,6 +1,8 @@
 import { Category } from '@modelscategories.mode';
+import { File } from '@modelsfile.model';
 import { Project } from '@modelsproject.model';
 import { Task, TaskType } from '@modelstask.model';
+import { getProjectInfo } from '@servicesdashboard.services';
 import express from 'express';
 import mongoose from 'mongoose';
 import { GridFSBucket } from 'src';
@@ -91,7 +93,7 @@ const closeTask = async (req: express.Request, res: express.Response) => {
 const deleteTask = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
-    await Task.findOneAndDelete({ _id: id });
+    await Task.findOneAndDelete({ _id: new mongoose.Types.ObjectId(id) });
     res.status(200).json({
       success: true,
     });
@@ -104,7 +106,9 @@ const getAttachments = async (req: express.Request, res: express.Response) => {
   try {
     const { id } = req.params;
 
-    const { attachments } = await Task.findById(id, 'attachments');
+    // const { attachments } = await Task.findById(id, 'attachments');
+
+    const attachments = await File.find({ 'metadata.taskId': new mongoose.Types.ObjectId(id as string) });
 
     res.status(200).json({
       success: true,
@@ -119,7 +123,8 @@ const fileFilesFromAttachments = async (req: express.Request, res: express.Respo
   try {
     const { id } = req.params;
 
-    const deleteFile = await Task.updateOne({ 'attachments.file_id': id }, { $pull: { attachments: { file_id: id } } });
+    // const deleteFile = await Task.updateOne({ 'attachments.file_id': id }, { $pull: { attachments: { file_id: id } } });
+    const deleteFile = await File.deleteOne({ _id: new mongoose.Types.ObjectId(id as string) });
 
     res.status(200).json({
       success: true,

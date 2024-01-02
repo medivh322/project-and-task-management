@@ -35,7 +35,7 @@ import { checkAccess } from '@helpersindex';
 
 const router = express.Router();
 
-router.post('/role', checkAccess(), async (req: express.Request, res: express.Response) => {
+router.post('/role', checkAccess(), (req: express.Request, res: express.Response) => {
   res.status(200).json({
     success: true,
   });
@@ -49,7 +49,7 @@ router.get('/projects/s/members', catchErrors(searchMembers));
 router.get('/projects/getlist/:id', catchErrors(getProjectsList));
 router.get('/projects/:id', catchErrors(getCurrentProjectInfo));
 router.get('/projects/members/:projectId', catchErrors(getMembersProject));
-router.delete('/projects/:id', catchErrors(deleteProject));
+router.delete('/projects/:id', checkAccess('Admin'), catchErrors(deleteProject));
 
 router.post('/categories', catchErrors(categoryCreate));
 router.delete('/categories/:id', catchErrors(categoryDelete));

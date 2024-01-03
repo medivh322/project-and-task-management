@@ -1,4 +1,4 @@
-import { Flex, Menu, Skeleton, Typography } from "antd";
+import { Button, Flex, Menu, Skeleton, Typography } from "antd";
 import { useAppSelector } from "../../../redux/store";
 
 import { ItemType } from "antd/es/menu/hooks/useItems";
@@ -8,7 +8,6 @@ import { useGetListProjectsQuery } from "../../../redux/kanban/reducer";
 import AddProjects from "./popovers/AddProject";
 import { selectCommon } from "../../../redux/common/selectors";
 import Logout from "./Logout";
-import { AppstoreOutlined } from "@ant-design/icons";
 
 const SidebarMenu: FC = () => {
   const { userId } = useAppSelector(selectCommon);
@@ -52,7 +51,6 @@ const SidebarMenu: FC = () => {
               title: project.name,
               label: project.name,
               disabled: isFetching,
-              icon: <AppstoreOutlined />,
             })
           )}
         />
@@ -60,7 +58,14 @@ const SidebarMenu: FC = () => {
         <div>список проектов пуст</div>
       )}
       <AddProjects userId={userId} />
-      <Logout />
+      <Button type="text" style={{ height: "auto" }}>
+        <Flex align="center" justify="start">
+          <Logout />
+          <Typography.Text style={{ color: "white", marginLeft: "10px" }}>
+            Выход
+          </Typography.Text>
+        </Flex>
+      </Button>
     </Flex>
   );
 };

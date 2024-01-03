@@ -43,7 +43,7 @@ const noLoggenInRouter = (
   </>
 );
 
-const App: FC<{ cookies: Cookies }> = ({ cookies }) => {
+const App = () => {
   const { isLoadingFullScreen } = useAppSelector(selectCommon);
   const [api, contextHolder] = notification.useNotification();
 
@@ -56,9 +56,7 @@ const App: FC<{ cookies: Cookies }> = ({ cookies }) => {
   useEffect(() => {
     if (isError) {
       api.error({
-        message: "Notification Title",
-        description:
-          "This is the content of the notification. This is the content of the notification. This is the content of the notification.",
+        message: "Ошибка проверки токена",
       });
     }
   }, [api, isError]);

@@ -1,5 +1,6 @@
-import { Popover, Alert, Input, Button, Form } from "antd";
+import { Popover, Alert, Input, Button, Form, Flex, Typography } from "antd";
 import { useAddListProjectsMutation } from "../../../../redux/kanban/reducer";
+import { AppstoreAddOutlined } from "@ant-design/icons";
 
 const AddProjects: React.FC<{ userId: string | null }> = ({ userId }) => {
   const [
@@ -58,13 +59,18 @@ const AddProjects: React.FC<{ userId: string | null }> = ({ userId }) => {
       title="Создать проект"
       trigger={"click"}
     >
-      <Button
-        block
-        style={{
-          marginTop: 20,
-        }}
-      >
-        добавить проект
+      <Button type="text" style={{ height: "auto" }}>
+        <Flex align="center" justify="start">
+          <AppstoreAddOutlined
+            style={{
+              fontSize: "40px",
+              color: "white",
+            }}
+          />
+          <Typography.Text style={{ color: "white", marginLeft: "10px" }}>
+            Добавить проект
+          </Typography.Text>
+        </Flex>
       </Button>
     </Popover>
   );

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "../../config/serverApiConfig";
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/dist/query/react";
+import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
 import kanbanSlice from "../kanban/reducer";
 import { Key } from "antd/es/table/interface";
@@ -158,7 +158,7 @@ const taskApi = createApi({
       }) => response.members,
     }),
     setMemberTask: builder.mutation<
-      void,
+      string[],
       { membersArray: Key[]; taskId: string | undefined }
     >({
       query: ({ membersArray, taskId }) => ({
@@ -169,6 +169,21 @@ const taskApi = createApi({
           taskId,
         },
       }),
+      async onQueryStarted(arg, { queryFulfilled, dispatch }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions.SET_MEMBERS({
+              members: data,
+              taskId: arg.taskId as string,
+            })
+          );
+        } catch (error: unknown) {
+          errorHandler(error as ErrorRes);
+        }
+      },
+      transformResponse: (response: { members: { name: string }[] }) =>
+        response.members.map((member) => member.name),
       invalidatesTags: ["Members"],
     }),
     getMembersTask: builder.query<

@@ -2,6 +2,7 @@ import { Category } from '@modelscategories.mode';
 import { File } from '@modelsfile.model';
 import { Project } from '@modelsproject.model';
 import { Task, TaskType } from '@modelstask.model';
+import { User } from '@modelsuser.model';
 import { getProjectInfo } from '@servicesdashboard.services';
 import express from 'express';
 import mongoose from 'mongoose';
@@ -266,7 +267,7 @@ const setMembers = async (req: express.Request, res: express.Response) => {
   try {
     const { membersArray, taskId } = req.body;
 
-    await Task.updateOne(
+    const updatedDoc = await Task.findOneAndUpdate(
       { _id: taskId },
       {
         $addToSet: {
@@ -277,11 +278,24 @@ const setMembers = async (req: express.Request, res: express.Response) => {
           },
         },
       },
+      { new: true },
     );
+    const members = await User.aggregate([
+      {
+        $match: { _id: { $in: updatedDoc.members.map((item: any) => item.user_id) } },
+      },
+      {
+        $project: {
+          name: '$login',
+          _id: 0,
+        },
+      },
+    ]);
 
     res.status(200).json({
       success: true,
       message: 'пользователь был успешно добавлен в исполнители задачи',
+      members,
     });
   } catch (error: any) {
     res.status(500).json({

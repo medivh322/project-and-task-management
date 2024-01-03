@@ -9,9 +9,11 @@ import {
   CHANGE_STATUS_TASK,
   CHANGE_STATUS_UPLOAD_FILE,
   CLOSE_TASK,
+  DELETE_CATEGORY,
   DELETE_TASK,
   KANBAN_REDUCER,
   SET_BOARDDATA,
+  SET_MEMBERS,
   SET_NEW_CATEGORY,
   SET_NEW_TASK,
   SET_PROJECT_LIST,
@@ -73,6 +75,17 @@ const kanbanSlice = createSlice({
       if (state.boardData !== null) {
         state.boardData = [...state.boardData, action.payload.category];
       }
+    },
+    [DELETE_CATEGORY]: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+      }>
+    ) => {
+      state.boardData?.forEach((category, iCategory) => {
+        if (category._id === action.payload.categoryId)
+          (state.boardData as Category[]).splice(iCategory, 1);
+      });
     },
     [SET_NEW_TASK]: (
       state,
@@ -152,6 +165,23 @@ const kanbanSlice = createSlice({
       }>
     ) => {
       state.uploadingFile = action.payload.status;
+    },
+    [SET_MEMBERS]: (
+      state,
+      action: PayloadAction<{
+        members: string[];
+        taskId: string;
+      }>
+    ) => {
+      if (state.boardData !== null) {
+        state.boardData.forEach((category, iCategory) => {
+          category.tasks.forEach((task, iTask) => {
+            if (task._id === action.payload.taskId && state.boardData)
+              state.boardData[iCategory].tasks[iTask].members =
+                action.payload.members;
+          });
+        });
+      }
     },
   },
 });
@@ -395,16 +425,17 @@ export const projectsApi = createApi({
         };
       },
       async onQueryStarted(arg, { queryFulfilled, dispatch }) {
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
         try {
           await queryFulfilled;
+          dispatch(
+            kanbanSlice.actions[DELETE_CATEGORY]({
+              categoryId: arg.categoryId as string,
+            })
+          );
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }
-        dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: false }));
       },
-      invalidatesTags: (result) =>
-        typeof result !== "undefined" ? ["Categories"] : [],
     }),
   }),
 });

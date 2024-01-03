@@ -48,16 +48,17 @@ const ModalTask = () => {
   const closeModal = async (closed: boolean) => {
     const pickParameters = ["description", "name", "date_end"];
     const body = form.getFieldsValue(pickParameters);
-    body.date_end = dayjs(body.date_end[1]).isValid()
-      ? dayjs(body.date_end[1])
-      : "";
+    body.date_end = body?.date_end[1] ? dayjs(body?.date_end[1]) : null;
     if (
       !_.isEqual(
         _.pick(
           {
             description: data?.description,
             name: data?.name,
-            date_end: dayjs(data?.date_end),
+            date_end:
+              typeof data?.date_end !== "undefined"
+                ? dayjs(data?.date_end)
+                : null,
           },
           pickParameters
         ),
@@ -120,10 +121,15 @@ const ModalTask = () => {
                 style={{ margin: 0 }}
                 initialValue={[
                   dayjs(data.date_start),
-                  dayjs(data.date_end).isValid() ? dayjs(data.date_end) : false,
+                  typeof data.date_end !== "undefined"
+                    ? dayjs(data.date_end)
+                    : null,
                 ]}
               >
-                <DatePicker.RangePicker disabled={[true, closed]} />
+                <DatePicker.RangePicker
+                  disabled={[true, closed]}
+                  allowEmpty={[false, true]}
+                />
               </Form.Item>
             </Space>
             {isOverdue && (

@@ -1,5 +1,14 @@
-import { Input, Table, Spin, notification, Typography, Button } from "antd";
 import {
+  Input,
+  Table,
+  Spin,
+  notification,
+  Typography,
+  Button,
+  Checkbox,
+} from "antd";
+import {
+  useDeleteMembersProjectMutation,
   useGetMembersProjectQuery,
   useSearchMembersMutation,
   useShareMembersMutation,
@@ -16,6 +25,7 @@ const Share = () => {
   });
   const { projectId } = useParams();
   const [membersIds, setMembersIds] = useState<Key[]>([]);
+  const [membersIdsForDelete, setMembersIdsForDelete] = useState<string[]>([]);
 
   const [search, { data: membersList, isLoading, reset }] =
     useSearchMembersMutation();
@@ -23,9 +33,10 @@ const Share = () => {
     useShareMembersMutation();
   const { data: membersProject, isLoading: fetchMember } =
     useGetMembersProjectQuery({ projectId }, { skip: !projectId });
+  const [deleteMembers] = useDeleteMembersProjectMutation();
   useEffect(() => {
-    reset();
-  }, [successSharing]);
+    if (successSharing) reset();
+  }, [reset, successSharing]);
 
   const handleShare = async () => {
     if (!membersIds.length)
@@ -66,26 +77,58 @@ const Share = () => {
         </Button>
 
         {membersProject?.length && (
-          <Table
-            title={() => (
-              <Typography.Text
-                style={{ textAlign: "center", display: "block" }}
+          <>
+            <Table
+              title={() => (
+                <Typography.Text
+                  style={{ textAlign: "center", display: "block" }}
+                >
+                  Добавленные пользователи
+                </Typography.Text>
+              )}
+              showHeader={false}
+              dataSource={membersProject}
+              pagination={false}
+              columns={[
+                {
+                  dataIndex: "action",
+                  key: "action",
+                  render: (_, record) =>
+                    record.role !== "Администратор" ? (
+                      <Checkbox
+                        onChange={(e) => {
+                          setMembersIdsForDelete((state) => {
+                            const copy = [...state];
+                            if (e.target.checked) copy.push(record.key);
+                            else
+                              copy.splice(
+                                copy.findIndex((id) => id === record.key),
+                                1
+                              );
+                            return copy;
+                          });
+                        }}
+                      />
+                    ) : null,
+                },
+                {
+                  dataIndex: "name",
+                },
+                {
+                  dataIndex: "role",
+                },
+              ]}
+            />
+            {!!membersIdsForDelete.length && (
+              <Button
+                onClick={() =>
+                  deleteMembers({ projectId, members: membersIdsForDelete })
+                }
               >
-                Добавленные пользователи
-              </Typography.Text>
+                удалить
+              </Button>
             )}
-            showHeader={false}
-            dataSource={membersProject}
-            pagination={false}
-            columns={[
-              {
-                dataIndex: "name",
-              },
-              {
-                dataIndex: "role",
-              },
-            ]}
-          />
+          </>
         )}
       </Spin>
     </>

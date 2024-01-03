@@ -1,5 +1,6 @@
-import { Button, Input, Table, Typography } from "antd";
+import { Button, Checkbox, Input, Table, Typography } from "antd";
 import {
+  useDeleteMembersTaskMutation,
   useGetMembersTaskQuery,
   useSearchMembersTaskMutation,
   useSetMemberTaskMutation,
@@ -18,13 +19,15 @@ const SearchMembers = () => {
     { taskId },
     { skip: !taskId }
   );
+  const [deleteMembers] = useDeleteMembersTaskMutation();
   const [membersIds, setMembersIds] = useState<Key[]>([]);
+  const [membersIdsForDelete, setMembersIdsForDelete] = useState<string[]>([]);
 
   useEffect(() => {
-    if (successSetMember) {
+    if (settingMember) {
       reset();
     }
-  }, [reset, successSetMember]);
+  }, [reset, settingMember]);
 
   return (
     <div>
@@ -68,10 +71,39 @@ const SearchMembers = () => {
         pagination={false}
         columns={[
           {
+            dataIndex: "action",
+            key: "action",
+            render: (_, record) => (
+              <Checkbox
+                onChange={(e) => {
+                  setMembersIdsForDelete((state) => {
+                    const copy = [...state];
+                    if (e.target.checked) copy.push(record._id);
+                    else
+                      copy.splice(
+                        copy.findIndex((id) => id === record._id),
+                        1
+                      );
+                    return copy;
+                  });
+                }}
+              />
+            ),
+          },
+          {
             dataIndex: "name",
           },
         ]}
       />
+      {!!membersIdsForDelete.length && (
+        <Button
+          onClick={() =>
+            deleteMembers({ taskId, members: membersIdsForDelete })
+          }
+        >
+          удалить
+        </Button>
+      )}
     </div>
   );
 };

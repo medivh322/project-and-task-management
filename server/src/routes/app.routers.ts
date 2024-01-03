@@ -8,10 +8,12 @@ import {
   deleteProject,
   searchMembers,
   shareMembers,
+  deleteMembersProject,
 } from '@controllersappControllers/project.controller';
 import {
   changeStatus,
   closeTask,
+  deleteMembersTask,
   deleteTask,
   fileFilesFromAttachments,
   getAttachments,
@@ -49,6 +51,7 @@ router.get('/projects/s/members', catchErrors(searchMembers));
 router.get('/projects/getlist/:id', catchErrors(getProjectsList));
 router.get('/projects/:id', catchErrors(getCurrentProjectInfo));
 router.get('/projects/members/:projectId', catchErrors(getMembersProject));
+router.delete('/projects/members/:projectId', catchErrors(deleteMembersProject));
 router.delete('/projects/:id', checkAccess('Admin'), catchErrors(deleteProject));
 
 router.post('/categories', catchErrors(categoryCreate));
@@ -65,6 +68,7 @@ router.get('/tasks/members/:taskId', catchErrors(getTaskMembers));
 router.put('/tasks/:id', catchErrors(saveTask));
 router.put('/tasks/c/:id', catchErrors(closeTask));
 router.delete('/tasks/:id', catchErrors(deleteTask));
+router.delete('/tasks/members/:taskId', catchErrors(deleteMembersTask));
 
 router.post('/upload/:id', upload.single('file'), catchErrors(uploadFilesTask));
 router.get('/download/file/:id', catchErrors(downloadFiles));

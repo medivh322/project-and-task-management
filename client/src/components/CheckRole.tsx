@@ -10,14 +10,14 @@ const CheckRolesWrapper: FC<{ children?: JSX.Element; accessRole: string }> = ({
 }) => {
   const { userId } = useAppSelector(selectCommon);
   const { projectId } = useParams();
-  const { isError } = useCheckAccessRoleQuery(
+  const { isError, isFetching } = useCheckAccessRoleQuery(
     { projectId, accessRole },
     {
       skip: !userId && !projectId,
     }
   );
 
-  if (isError) return null;
+  if (isError || isFetching) return null;
 
   return <div>{children}</div>;
 };

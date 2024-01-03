@@ -318,6 +318,28 @@ const getMembersProject = async (req: express.Request, res: express.Response) =>
   }
 };
 
+const deleteMembersProject = async (req: express.Request, res: express.Response) => {
+  try {
+    const { projectId } = req.params;
+    const { members } = req.body;
+
+    await Project.updateOne(
+      { _id: new mongoose.Types.ObjectId(projectId) },
+      { $pull: { members: { user_id: { $in: members } } } },
+    );
+
+    res.status(200).json({
+      success: true,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+};
+
 export {
   getProjectsList,
   getCurrentProjectInfo,
@@ -326,4 +348,5 @@ export {
   deleteProject,
   searchMembers,
   shareMembers,
+  deleteMembersProject,
 };

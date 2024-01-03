@@ -186,6 +186,21 @@ const taskApi = createApi({
         response.members.map((member) => member.name),
       invalidatesTags: ["Members"],
     }),
+    deleteMembersTask: builder.mutation<
+      void,
+      { taskId: string | undefined; members: string[] }
+    >({
+      query({ taskId, members }) {
+        return {
+          url: "tasks/members/" + taskId,
+          body: {
+            members,
+          },
+          method: "DELETE",
+        };
+      },
+      invalidatesTags: ["Members"],
+    }),
     getMembersTask: builder.query<
       {
         _id: string;
@@ -259,5 +274,6 @@ export const {
   useSearchMembersTaskMutation,
   useSetMemberTaskMutation,
   useGetMembersTaskQuery,
+  useDeleteMembersTaskMutation,
 } = taskApi;
 export default taskApi;

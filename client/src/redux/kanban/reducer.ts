@@ -393,6 +393,21 @@ export const projectsApi = createApi({
       }) => response.members,
       providesTags: ["Members"],
     }),
+    deleteMembersProject: builder.mutation<
+      void,
+      { projectId: string | undefined; members: string[] }
+    >({
+      query({ projectId, members }) {
+        return {
+          url: "projects/members/" + projectId,
+          body: {
+            members,
+          },
+          method: "DELETE",
+        };
+      },
+      invalidatesTags: ["Members"],
+    }),
     addCategory: builder.mutation<
       Category,
       { name: string; projectId: string | undefined }
@@ -451,6 +466,7 @@ export const {
   useSearchMembersMutation,
   useShareMembersMutation,
   useGetMembersProjectQuery,
+  useDeleteMembersProjectMutation
 } = projectsApi;
 export const kanbanReducerState = kanbanSlice.getInitialState;
 export const kanbanReducerAction = kanbanSlice.actions;

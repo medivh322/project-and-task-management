@@ -22,6 +22,7 @@ import { FC, useEffect, useMemo } from "react";
 import { useCheckTokenQuery } from "./redux/common/reducer";
 import { isUndefined } from "lodash";
 import { useGetListProjectsQuery } from "./redux/kanban/reducer";
+import CheckRolesWrapper from "./components/CheckRole";
 
 const loggenInRouter = (
   <Route element={<Root />}>
@@ -29,7 +30,14 @@ const loggenInRouter = (
     <Route path="dashboard" element={<Dashboard />} />
     <Route path="dashboard/:projectId" element={<Board />}>
       <Route path="m/:taskId" element={<ModalTask />} />
-      <Route path="s" element={<SettingsProject />} />
+      <Route
+        path="s"
+        element={
+          <CheckRolesWrapper accessRole="Admin">
+            <SettingsProject />
+          </CheckRolesWrapper>
+        }
+      />
     </Route>
     <Route path="*" element={<Navigate to={"/"} />} />
   </Route>

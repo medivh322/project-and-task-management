@@ -5,6 +5,7 @@ import AddCategory from "./popovers/AddCategory";
 import CategoryTable from "./CategoryTable";
 import { useAppSelector } from "../../../redux/store";
 import { getKanban } from "../../../redux/kanban/selectors";
+import CheckRolesWrapper from "../../../components/CheckRole";
 
 const Board = () => {
   const params = useParams();
@@ -22,9 +23,11 @@ const Board = () => {
   return (
     <Layout.Content style={{ overflow: "scroll", height: "100%" }}>
       <Space>
-        <Button>
-          <Link to={"s"}>Настройки</Link>
-        </Button>
+        <CheckRolesWrapper accessRole="Admin">
+          <Link to={"s"}>
+            <Button>Настройки</Button>
+          </Link>
+        </CheckRolesWrapper>
       </Space>
       <Layout style={{ marginTop: "10px" }}>
         <Space size={35} align="start" style={{ marginRight: "400px" }}>

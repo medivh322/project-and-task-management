@@ -306,6 +306,29 @@ const setMembers = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const deleteMembersTask = async (req: express.Request, res: express.Response) => {
+  try {
+    const { taskId } = req.params;
+    const { members } = req.body;
+
+    await Task.updateOne(
+      { _id: new mongoose.Types.ObjectId(taskId) },
+      { $pull: { members: { user_id: { $in: members } } } },
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'пользователи были успешно удалены из исполнителей',
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      error,
+    });
+  }
+};
+
 const getTaskMembers = async (req: express.Request, res: express.Response) => {
   try {
     const { taskId } = req.params;
@@ -374,4 +397,5 @@ export {
   setMembers,
   getTaskMembers,
   deleteTask,
+  deleteMembersTask,
 };

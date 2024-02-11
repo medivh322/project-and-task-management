@@ -1,7 +1,6 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
-import { commonReducerAction } from "../common/reducer";
 import { Key } from "antd/es/table/interface";
 import { Category, ProjectListItem, Task } from "../../types/models";
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
@@ -466,7 +465,7 @@ export const {
   useSearchMembersMutation,
   useShareMembersMutation,
   useGetMembersProjectQuery,
-  useDeleteMembersProjectMutation
+  useDeleteMembersProjectMutation,
 } = projectsApi;
 export const kanbanReducerState = kanbanSlice.getInitialState;
 export const kanbanReducerAction = kanbanSlice.actions;

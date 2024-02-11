@@ -43,6 +43,7 @@ export const commonApi = createApi({
     baseUrl: `${API_BASE_URL}`,
     credentials: "include",
   }),
+  tagTypes: ["Sign"],
   endpoints: (builder) => ({
     checkAccessRole: builder.query<
       void,
@@ -73,6 +74,7 @@ export const commonApi = createApi({
           errorHandler(error as ErrorRes);
         }
       },
+      providesTags: ["Sign"],
     }),
   }),
 });

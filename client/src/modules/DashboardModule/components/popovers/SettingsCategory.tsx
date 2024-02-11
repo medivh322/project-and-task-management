@@ -27,7 +27,7 @@ const SettingsCategory: FC<{ categoryId: string | undefined }> = ({
                     </div>
                   }
                 >
-                  закрыть категорию
+                  закрыть статус
                 </Popover>
               ),
               title: "удалить",

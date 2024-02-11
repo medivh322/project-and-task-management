@@ -4,6 +4,7 @@ import {
   useGetAttachmentsQuery,
 } from "../../../redux/task/reducer";
 import { FileOutlined } from "@ant-design/icons";
+import { useState } from "react";
 
 const Attachments = ({
   taskId,
@@ -23,11 +24,20 @@ const Attachments = ({
     );
   const [deleteFile, { isLoading: loadingDeleteFile }] =
     useDeleteFileMutation();
+  const [page, setPage] = useState(1);
 
   return (
     <Spin tip="загрузка..." spinning={fetchingAttachments || loadingDeleteFile}>
       <Typography.Text>вложения</Typography.Text>
       <List
+        pagination={{
+          position: "bottom",
+          align: "center",
+          defaultCurrent: Number(page) || 1,
+          total: typeof attachments !== "undefined" ? attachments.length : 1,
+          defaultPageSize: 5,
+          onChange: (value) => setPage(value),
+        }}
         dataSource={attachments}
         renderItem={(image) => (
           <List.Item key={image._id}>

@@ -2,7 +2,7 @@ import * as authTypes from "./types";
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { API_BASE_URL } from "../../config/serverApiConfig";
 import errorHandler, { ErrorRes } from "../../request/errorHundler";
-import { commonReducerAction } from "../common/reducer";
+import { commonApi, commonReducerAction } from "../common/reducer";
 
 type TSignRequest = "login" | "registration";
 
@@ -36,6 +36,7 @@ export const loggenApi = createApi({
         dispatch(commonReducerAction.LOADING_FULLSCREEN({ loading: true }));
         try {
           await queryFulfilled;
+          dispatch(commonApi.util.invalidateTags(["Sign"]));
         } catch (error: unknown) {
           errorHandler(error as ErrorRes);
         }

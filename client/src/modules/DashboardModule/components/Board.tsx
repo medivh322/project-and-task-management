@@ -22,14 +22,14 @@ const Board = () => {
 
   return (
     <Layout.Content style={{ overflow: "scroll", height: "100%" }}>
-      <Space>
-        <CheckRolesWrapper accessRole="Admin">
+      <CheckRolesWrapper accessRole="Admin">
+        <Space style={{ marginBottom: "10px" }}>
           <Link to={"s"}>
             <Button>Настройки</Button>
           </Link>
-        </CheckRolesWrapper>
-      </Space>
-      <Layout style={{ marginTop: "10px" }}>
+        </Space>
+      </CheckRolesWrapper>
+      <Layout>
         <Space size={35} align="start" style={{ marginRight: "400px" }}>
           {!!boardData?.length &&
             boardData.map((category) => (

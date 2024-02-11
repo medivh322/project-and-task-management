@@ -104,7 +104,7 @@ function Home() {
 
   if (isFetching) return <Spin spinning />;
 
-  if (!projectList.length) return <div>у вас нет проектов</div>;
+  if (!projectList.length) return <div>создайте проект</div>;
 
   return <Navigate to={"/dashboard/" + projectList[0]._id} />;
 }

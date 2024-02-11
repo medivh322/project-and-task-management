@@ -37,25 +37,29 @@ const SidebarMenu: FC = () => {
 
   return (
     <Flex vertical style={{ height: "100%", padding: "0 0 10px 0" }}>
-      <Typography.Text style={{ color: "white" }}>
-        Список проектов:
-      </Typography.Text>
       {projectsList.length ? (
-        <Menu
-          onClick={handleClickMenuProjects}
-          mode="inline"
-          style={{ height: "100%", borderRight: 0 }}
-          items={projectsList.map(
-            (project: any): ItemType => ({
-              key: project._id,
-              title: project.name,
-              label: project.name,
-              disabled: isFetching,
-            })
-          )}
-        />
+        <>
+          <Typography.Text style={{ color: "white", padding: "10px 15px" }}>
+            Список проектов:
+          </Typography.Text>
+          <Menu
+            onClick={handleClickMenuProjects}
+            mode="inline"
+            style={{ height: "100%", borderRight: 0 }}
+            items={projectsList.map(
+              (project: any): ItemType => ({
+                key: project._id,
+                title: project.name,
+                label: project.name,
+                disabled: isFetching,
+              })
+            )}
+          />
+        </>
       ) : (
-        <div>список проектов пуст</div>
+        <Typography.Text style={{ color: "white", padding: "10px 15px" }}>
+          список проектов пуст
+        </Typography.Text>
       )}
       <AddProjects userId={userId} />
       <Button type="text" style={{ height: "auto" }}>

@@ -27,7 +27,6 @@ export type TaskType = InferSchemaType<typeof TaskSchema>;
 TaskSchema.pre('findOneAndDelete', async function () {
   const { _id } = this.getQuery();
   const attachments = await File.find({ 'metadata.taskId': _id }, '_id');
-
   if (attachments.length) {
     for (const file of attachments) {
       await GridFSBucket.delete(new mongoose.mongo.ObjectId(file._id));
@@ -40,8 +39,10 @@ TaskSchema.pre('deleteMany', async function () {
 
   if (tasks.length) {
     for (const task of tasks) {
-      for (const file of task.attachments) {
-        await GridFSBucket.delete(new mongoose.mongo.ObjectId(file.file_id));
+      if (task.attachments) {
+        for (const file of task.attachments) {
+          await GridFSBucket.delete(new mongoose.mongo.ObjectId(file.file_id));
+        }
       }
     }
   }

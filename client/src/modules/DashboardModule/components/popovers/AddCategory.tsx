@@ -29,7 +29,7 @@ const AddCategory: FC<{ projectId: string | undefined }> = ({ projectId }) => {
         </Form>
       }
     >
-      <Button>добавить категорию</Button>
+      <Button>Добавить статус</Button>
     </Popover>
   );
 };
